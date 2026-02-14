@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLHR0 - Dashboard Gunungkidul</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a; --card: rgba(30, 41, 59, 0.7); --accent: #38bdf8;
+            --text: #f1f5f9; --text-dim: #94a3b8; --border: rgba(255, 255, 255, 0.1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: var(--bg); color: var(--text); padding: 15px; padding-bottom: 100px; }
+        .container { max-width: 600px; margin: auto; }
+        header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+        .card { background: var(--card); backdrop-filter: blur(10px); border: 1px solid var(--border); border-radius: 16px; padding: 18px; margin-bottom: 15px; }
+        .section-title { font-size: 0.85rem; font-weight: 700; margin-bottom: 12px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
+        
+        /* TABS */
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 12px; }
+        .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; background: transparent; color: var(--text-dim); cursor: pointer; font-weight: 700; transition: 0.3s; }
+        .tab-btn.active { background: var(--accent); color: white; }
+
+        /* SEARCH */
+        .search-container { margin-bottom: 15px; }
+        .search-input { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid var(--accent); background: rgba(15, 23, 42, 0.5); color: white; font-size: 1rem; outline: none; }
+
+        /* SATRIA LIST */
+        .satria-row { border-bottom: 1px solid var(--border); padding: 15px 5px; cursor: pointer; }
+        .satria-name { font-size: 1.1rem; font-weight: 600; display: block; }
+        .satria-id { font-size: 0.7rem; color: var(--text-dim); }
+        
+        /* INPUT AREA (Hidden by default) */
+        .input-area { display: none; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; }
+        .input-field { display: flex; flex-direction: column; align-items: center; }
+        .input-field label { font-size: 0.65rem; color: var(--accent); margin-bottom: 5px; font-weight: 700; }
+        
+        input[type="number"] { background: #1e293b; border: 1px solid var(--border); border-radius: 6px; color: white; padding: 12px 5px; outline: none; width: 100%; font-size: 1.2rem; text-align: center; font-weight: 700; }
+        input:focus { border-color: var(--accent); }
+
+        .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px; }
+        .summary-label { font-size: 0.75rem; color: var(--text-dim); }
+        .summary-val { font-size: 1.1rem; font-weight: 700; }
+        
+        .hidden { display: none !important; }
+        .btn-local-save { width: 100%; background: #475569; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: 700; margin-top: 15px; cursor: pointer; }
+        .btn-send { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 560px; background: linear-gradient(135deg, #22c55e, #16a34a); color: white; border: none; padding: 18px; border-radius: 50px; font-weight: 700; font-size: 1rem; cursor: pointer; box-shadow: 0 10px 20px rgba(22, 163, 74, 0.3); z-index: 100; }
+        
+        #password-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.98); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .modal-pw { background: #1e293b; padding: 30px; border-radius: 20px; text-align: center; border: 1px solid var(--accent); width: 85%; max-width: 320px; }
+    </style>
+</head>
+<body>
+
+<div id="password-overlay" class="hidden">
+    <div class="modal-pw">
+        <h3 style="margin-bottom: 20px;"> Akses Leader</h3>
+        <input type="password" id="pw_input" placeholder="Pin" style="margin-bottom: 20px; text-align: center; letter-spacing: 8px;">
+        <div style="display: flex; gap: 10px;">
+            <button onclick="closeLeader()" style="flex:1; padding:12px; border-radius:8px; border:none; background:#475569; color:white;">Batal</button>
+            <button onclick="checkPassword()" style="flex:1; padding:12px; border-radius:8px; border:none; background:var(--accent); color:white; font-weight:700;">Masuk</button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <header>
+        <h2 id="display-tgl"></h2>
+        <p style="color:var(--accent); font-weight: 600;">DAILY REPORT BLHR0</p>
+    </header>
+
+    <div class="tabs">
+        <button class="tab-btn active" id="tab-satria" onclick="switchTab('satria')">DATA SATRIA</button>
+        <button class="tab-btn" id="tab-leader" onclick="openLeaderModal()">MENU LEADER</button>
+    </div>
+
+    <div id="view-satria">
+        <div class="card" style="border: 1px solid var(--accent); background: rgba(56, 189, 248, 0.05);">
+            <div class="section-title">Hasil Otomatis</div>
+            <div class="summary-grid">
+                <div><p class="summary-label">So Outs</p><p class="summary-val" id="res_so">0</p></div>
+                <div><p class="summary-label">Failed Deliv</p><p class="summary-val" id="res_failed" style="color:#ef4444">0</p></div>
+                <div><p class="summary-label">Total Deliv</p><p class="summary-val" id="res_tdeliv" style="color:#22c55e">0</p></div>
+                <div><p class="summary-label">Prod Satria</p><p class="summary-val" id="res_prod">0</p></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="section-title">Daftar Satria</div>
+            <div class="search-container">
+                <input type="text" id="searchName" class="search-input" placeholder=" Cari Nama Satria..." oninput="filterName()">
+            </div>
+            
+            <div id="satria_list_container">
+                </div>
+
+            <button class="btn-local-save" onclick="saveLocalData()"> SIMPAN DATA SEMENTARA</button>
+        </div>
+    </div>
+
+    <div id="view-leader" class="hidden">
+        <div class="card">
+            <div class="section-title">1. Inbound & Pending</div>
+            <div style="display:flex; gap:10px">
+                <div style="flex:1"><label class="summary-label">Pending Kemarin</label><input type="number" id="pending_val" value="0" oninput="calculate()"></div>
+                <div style="flex:1"><label class="summary-label">Inbound Pagi</label><input type="number" id="inbound_val" value="0" oninput="calculate()"></div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="section-title">2. Daily Worker (DW)</div>
+            <div style="display:flex; gap:10px">
+                <div style="flex:1"><label class="summary-label">Deliv DW</label><input type="number" id="deliv_dw" value="0" oninput="calculate()"></div>
+                <div style="flex:1"><label class="summary-label">Pickup DW</label><input type="number" id="pu_dw" value="0" oninput="calculate()"></div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="section-title">3. Data Pendukung</div>
+            <div class="summary-grid">
+                <div><label class="summary-label">Load COD</label><input type="number" id="cod" value="0"></div>
+                <div><label class="summary-label">XRT</label><input type="number" id="xrt" value="0"></div>
+                <div><label class="summary-label">Return</label><input type="number" id="return" value="0"></div>
+                <div><label class="summary-label">Failed PU</label><input type="number" id="failed_pu" value="0"></div>
+            </div>
+        </div>
+        <button class="btn-send" id="btn-main" onclick="sendLaporan()">KIRIM LAPORAN KE WA</button>
+    </div>
+</div>
+
+<script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw-ivA449QOFpM4yv3PN5zfAcX4WgnYWkmUnc9ddIXrB62KVkIXnvWGWNu4-rcbDitYog/exec";
+    
+    const LIST_SATRIA = [
+        {id: "10078570", nama: "AHMAD KHOIRUL ANAAM"}, {id: "10070223", nama: "ARIF PRASETYO"},
+        {id: "10066194", nama: "AZI AZAN"}, {id: "10075590", nama: "BUDJA GIGIH PRABOWO"},
+        {id: "10072034", nama: "DENI KURNIAWAN"}, {id: "10082115", nama: "FAJAR SULISTIYANTO"},
+        {id: "10079245", nama: "FITLI APRIAN SAPUTRO"}, {id: "10049109", nama: "HERU PRATAMA"},
+        {id: "10074622", nama: "KANTONA CAHYA FEBRINANDA"}, {id: "10078994", nama: "RIDWAN EKA JUNIYANTO"},
+        {id: "10082966", nama: "RIZKI NUR AZIS"}, {id: "10073627", nama: "RIZKY TULUS SETIAWAN"},
+        {id: "10078864", nama: "RUDIKUSMANTO"}
+    ];
+
+    let isAuth = false;
+
+    function init() {
+        const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+        document.getElementById('display-tgl').innerText = new Intl.DateTimeFormat('id-ID', options).format(new Date());
+        
+        const container = document.getElementById('satria_list_container');
+        const savedData = JSON.parse(localStorage.getItem('satria_data')) || {};
+        
+        LIST_SATRIA.forEach(s => {
+            container.innerHTML += `
+                <div class="satria-row" onclick="toggleInput('${s.id}')">
+                    <span class="satria-id">${s.id}</span>
+                    <span class="satria-name">${s.nama}</span>
+                    <div id="input-area-${s.id}" class="input-area" onclick="event.stopPropagation()">
+                        <div class="input-field">
+                            <label>DELIVERY</label>
+                            <input type="number" class="deliv-in" data-id="${s.id}" value="${savedData[`deliv_${s.id}`] || 0}" oninput="calculate()">
+                        </div>
+                        <div class="input-field">
+                            <label>PICKUP</label>
+                            <input type="number" class="pu-in" data-id="${s.id}" value="${savedData[`pu_${s.id}`] || 0}" oninput="calculate()">
+                        </div>
+                        <div class="input-field">
+                            <label>PENDING</label>
+                            <input type="number" class="pnd-in" data-id="${s.id}" value="${savedData[`pnd_${s.id}`] || 0}" oninput="calculate()">
+                        </div>
+                    </div>
+                </div>`;
+        });
+        document.getElementById('pending_val').value = localStorage.getItem('last_pending') || 0;
+        calculate();
+    }
+
+    function toggleInput(id) {
+        const area = document.getElementById(`input-area-${id}`);
+        const isVisible = area.style.display === 'grid';
+        
+        // Sembunyikan semua dulu agar rapi (optional)
+        document.querySelectorAll('.input-area').forEach(el => el.style.display = 'none');
+        
+        // Tampilkan yang dipilih
+        area.style.display = isVisible ? 'none' : 'grid';
+    }
+
+    function filterName() {
+        const q = document.getElementById('searchName').value.toUpperCase();
+        const rows = document.querySelectorAll('.satria-row');
+        rows.forEach(row => {
+            const name = row.querySelector('.satria-name').innerText;
+            row.style.display = name.includes(q) ? 'block' : 'none';
+        });
+    }
+
+    function calculate() {
+        let tDelivS = 0;
+        let dutyCount = 0;
+        document.querySelectorAll('.deliv-in').forEach(el => {
+            let val = parseInt(el.value) || 0;
+            tDelivS += val;
+            if (val > 0) dutyCount++;
+        });
+        
+        const pending = parseInt(document.getElementById('pending_val').value) || 0;
+        const inbound = parseInt(document.getElementById('inbound_val').value) || 0;
+        const delivDW = parseInt(document.getElementById('deliv_dw').value) || 0;
+        const soOuts = pending + inbound;
+        const totalDeliv = tDelivS + delivDW;
+        
+        document.getElementById('res_so').innerText = soOuts;
+        document.getElementById('res_tdeliv').innerText = totalDeliv;
+        document.getElementById('res_failed').innerText = soOuts - totalDeliv;
+        document.getElementById('res_prod').innerText = (tDelivS / LIST_SATRIA.length).toFixed(2);
+        return dutyCount;
+    }
+
+    async function sendLaporan() {
+        const btn = document.getElementById('btn-main');
+        btn.innerText = "MENGIRIM...";
+        btn.disabled = true;
+
+        const tgl = document.getElementById('display-tgl').innerText;
+        let tDelivS = 0; let tPuS = 0;
+        let detailSatria = [];
+        let dutyCount = calculate();
+
+        LIST_SATRIA.forEach(s => {
+            const deliv = parseInt(document.querySelector(`.deliv-in[data-id="${s.id}"]`).value) || 0;
+            const pu = parseInt(document.querySelector(`.pu-in[data-id="${s.id}"]`).value) || 0;
+            const pnd = parseInt(document.querySelector(`.pnd-in[data-id="${s.id}"]`).value) || 0;
+            tDelivS += deliv; tPuS += pu;
+            if (deliv > 0 || pu > 0 || pnd > 0) {
+                detailSatria.push({ nama: s.nama, deliv: deliv, pu: pu, pending: pnd });
+            }
+        });
+
+        const dDW = parseInt(document.getElementById('deliv_dw').value) || 0;
+        const puDW = parseInt(document.getElementById('pu_dw').value) || 0;
+        const payload = { 
+            tgl: tgl, so: document.getElementById('res_so').innerText, 
+            tDelivS: tDelivS, prod: document.getElementById('res_prod').innerText, 
+            failed: document.getElementById('res_failed').innerText, 
+            tPuS: tPuS + puDW, dw: dDW, onDuty: dutyCount, detailSatria: detailSatria
+        };
+
+        try { await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }); } catch (e) {}
+
+        let msg = `*BLHR0 - Gunungkidul*\n${tgl}\n\n*So outs* : ${payload.so}\nProd Satria : ${tDelivS}\nProd DW : ${dDW}\nFailed : ${payload.failed}\nPickup : ${payload.tPuS}\nOn Duty : ${dutyCount}`;
+        window.open(`https://wa.me/6282210011917?text=${encodeURIComponent(msg)}`, '_blank');
+        btn.innerText = "KIRIM LAPORAN KE WA"; btn.disabled = false;
+    }
+
+    function saveLocalData() {
+        const data = {};
+        document.querySelectorAll('.deliv-in').forEach(el => data[`deliv_${el.dataset.id}`] = el.value);
+        document.querySelectorAll('.pu-in').forEach(el => data[`pu_${el.dataset.id}`] = el.value);
+        document.querySelectorAll('.pnd-in').forEach(el => data[`pnd_${el.dataset.id}`] = el.value);
+        localStorage.setItem('satria_data', JSON.stringify(data));
+        localStorage.setItem('last_pending', document.getElementById('pending_val').value);
+        alert("Data Berhasil Disimpan!");
+    }
+
+    function openLeaderModal() {
+        if (isAuth) { switchTab('leader'); } 
+        else { document.getElementById('password-overlay').classList.remove('hidden'); }
+    }
+
+    function checkPassword() {
+        if (document.getElementById('pw_input').value === "888888") {
+            isAuth = true;
+            document.getElementById('password-overlay').classList.add('hidden');
+            switchTab('leader');
+        } else { alert("Salah!"); }
+        document.getElementById('pw_input').value = "";
+    }
+
+    function closeLeader() { document.getElementById('password-overlay').classList.add('hidden'); }
+
+    function switchTab(tab) {
+        document.getElementById('tab-satria').classList.toggle('active', tab === 'satria');
+        document.getElementById('tab-leader').classList.toggle('active', tab === 'leader');
+        document.getElementById('view-satria').classList.toggle('hidden', tab !== 'satria');
+        document.getElementById('view-leader').classList.toggle('hidden', tab !== 'leader');
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>
