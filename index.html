@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BLHR0 - Dashboard Gunungkidul</title>
+    <title>BLHR0 - Dashboard Realtime</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -21,29 +21,25 @@
         .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; background: transparent; color: var(--text-dim); cursor: pointer; font-weight: 700; transition: 0.3s; }
         .tab-btn.active { background: var(--accent); color: white; }
 
-        /* SUMMARY */
         .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px; }
         .summary-label { font-size: 0.75rem; color: var(--text-dim); }
         .summary-val { font-size: 1.1rem; font-weight: 700; }
 
-        /* SEARCH & LIST */
         .search-input { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid var(--accent); background: rgba(15, 23, 42, 0.5); color: white; font-size: 1rem; outline: none; margin-bottom: 15px; }
         .satria-row { border-bottom: 1px solid var(--border); padding: 15px 5px; cursor: pointer; }
         .satria-name { font-size: 1.15rem; font-weight: 600; display: block; color: white; }
-        .satria-id { font-size: 0.7rem; color: var(--text-dim); }
+        .satria-status { font-size: 0.7rem; color: #22c55e; font-weight: 700; display: none; margin-top: 4px; }
         
-        /* INPUT AREA */
         .input-area { display: none; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; }
         .input-field { display: flex; flex-direction: column; align-items: center; }
         .input-field label { font-size: 0.65rem; color: var(--accent); margin-bottom: 5px; font-weight: 700; }
         
         input[type="number"] { background: #1e293b; border: 1px solid var(--border); border-radius: 6px; color: white; padding: 12px 5px; outline: none; width: 100%; font-size: 1.2rem; text-align: center; font-weight: 700; }
-        input:focus { border-color: var(--accent); }
-
-        .hidden { display: none !important; }
-        .btn-local-save { width: 100%; background: #475569; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: 700; margin-top: 15px; cursor: pointer; }
+        
+        .btn-sync { grid-column: span 3; background: var(--accent); color: #0f172a; border: none; padding: 12px; border-radius: 8px; font-weight: 800; margin-top: 10px; cursor: pointer; }
         .btn-send { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 560px; background: linear-gradient(135deg, #22c55e, #16a34a); color: white; border: none; padding: 18px; border-radius: 50px; font-weight: 700; font-size: 1rem; cursor: pointer; box-shadow: 0 10px 20px rgba(22, 163, 74, 0.3); z-index: 100; }
         
+        .hidden { display: none !important; }
         #password-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.98); display: flex; align-items: center; justify-content: center; z-index: 9999; }
         .modal-pw { background: #1e293b; padding: 30px; border-radius: 20px; text-align: center; border: 1px solid var(--accent); width: 85%; max-width: 320px; }
     </style>
@@ -53,7 +49,7 @@
 <div id="password-overlay" class="hidden">
     <div class="modal-pw">
         <h3>🔒 Akses Leader</h3>
-        <input type="password" id="pw_input" placeholder="Pin" style="margin: 20px 0; text-align: center; letter-spacing: 8px;">
+        <input type="password" id="pw_input" placeholder="Pin" style="margin: 20px 0; text-align: center; letter-spacing: 8px; width:100%; padding:10px; border-radius:8px; border:none;">
         <div style="display: flex; gap: 10px;">
             <button onclick="closeLeader()" style="flex:1; padding:12px; background:#475569; color:white; border:none; border-radius:8px;">Batal</button>
             <button onclick="checkPassword()" style="flex:1; padding:12px; background:var(--accent); color:white; border:none; border-radius:8px; font-weight:700;">Masuk</button>
@@ -74,7 +70,7 @@
 
     <div id="view-satria">
         <div class="card" style="border: 1px solid var(--accent); background: rgba(56, 189, 248, 0.05);">
-            <div class="section-title">Hasil Otomatis</div>
+            <div class="section-title">Hasil Realtime (Semua Satria)</div>
             <div class="summary-grid">
                 <div><p class="summary-label">So Outs</p><p class="summary-val" id="res_so">0</p></div>
                 <div><p class="summary-label">Failed Deliv</p><p class="summary-val" id="res_failed" style="color:#ef4444">0</p></div>
@@ -87,7 +83,6 @@
             <div class="section-title">Cari Nama Satria</div>
             <input type="text" id="searchName" class="search-input" placeholder="Ketik nama anda..." oninput="filterName()">
             <div id="satria_list_container"></div>
-            <button class="btn-local-save" onclick="saveLocalData()">💾 SIMPAN DATA SEMENTARA</button>
         </div>
     </div>
 
@@ -95,31 +90,32 @@
         <div class="card">
             <div class="section-title">1. Inbound & Pending</div>
             <div style="display:flex; gap:10px">
-                <div style="flex:1"><label class="summary-label">Pending Kemarin</label><input type="number" id="pending_val" value="0" onfocus="clearZero(this)" oninput="calculate()"></div>
-                <div style="flex:1"><label class="summary-label">Inbound Pagi</label><input type="number" id="inbound_val" value="0" onfocus="clearZero(this)" oninput="calculate()"></div>
+                <div style="flex:1"><label class="summary-label">Pending Kemarin</label><input type="number" id="pending_val" value="0" onfocus="clearZero(this)" onchange="syncLeader()"></div>
+                <div style="flex:1"><label class="summary-label">Inbound Pagi</label><input type="number" id="inbound_val" value="0" onfocus="clearZero(this)" onchange="syncLeader()"></div>
             </div>
         </div>
         <div class="card">
             <div class="section-title">2. Daily Worker (DW)</div>
             <div style="display:flex; gap:10px">
-                <div style="flex:1"><label class="summary-label">Deliv DW</label><input type="number" id="deliv_dw" value="0" onfocus="clearZero(this)" oninput="calculate()"></div>
-                <div style="flex:1"><label class="summary-label">Pickup DW</label><input type="number" id="pu_dw" value="0" onfocus="clearZero(this)" oninput="calculate()"></div>
+                <div style="flex:1"><label class="summary-label">Deliv DW</label><input type="number" id="deliv_dw" value="0" onfocus="clearZero(this)" onchange="syncLeader()"></div>
+                <div style="flex:1"><label class="summary-label">Pickup DW</label><input type="number" id="pu_dw" value="0" onfocus="clearZero(this)" onchange="syncLeader()"></div>
             </div>
         </div>
         <div class="card">
             <div class="section-title">3. Data Pendukung</div>
             <div class="summary-grid">
-                <div><label class="summary-label">Load COD</label><input type="number" id="cod" value="0" onfocus="clearZero(this)"></div>
-                <div><label class="summary-label">XRT</label><input type="number" id="xrt" value="0" onfocus="clearZero(this)"></div>
-                <div><label class="summary-label">Return</label><input type="number" id="return" value="0" onfocus="clearZero(this)"></div>
-                <div><label class="summary-label">Failed PU</label><input type="number" id="failed_pu" value="0" onfocus="clearZero(this)"></div>
+                <div><label class="summary-label">Load COD</label><input type="number" id="cod" value="0" onfocus="clearZero(this)" onchange="syncLeader()"></div>
+                <div><label class="summary-label">XRT</label><input type="number" id="xrt" value="0" onfocus="clearZero(this)" onchange="syncLeader()"></div>
+                <div><label class="summary-label">Return</label><input type="number" id="return" value="0" onfocus="clearZero(this)" onchange="syncLeader()"></div>
+                <div><label class="summary-label">Failed PU</label><input type="number" id="failed_pu" value="0" onfocus="clearZero(this)" onchange="syncLeader()"></div>
             </div>
         </div>
-        <button class="btn-send" id="btn-main" onclick="sendLaporan()">KIRIM LAPORAN KE WA</button>
+        <button class="btn-send" id="btn-main" onclick="sendLaporan()">KIRIM LAPORAN KE WA & GSHEET</button>
     </div>
 </div>
 
 <script>
+    const FIREBASE_URL = "https://dashboard-blhr0-default-rtdb.asia-southeast1.firebasedatabase.app/";
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw-ivA449QOFpM4yv3PN5zfAcX4WgnYWkmUnc9ddIXrB62KVkIXnvWGWNu4-rcbDitYog/exec";
     
     const LIST_SATRIA = [
@@ -137,33 +133,84 @@
         document.getElementById('display-tgl').innerText = new Intl.DateTimeFormat('id-ID', options).format(new Date());
         
         const container = document.getElementById('satria_list_container');
-        const savedData = JSON.parse(localStorage.getItem('satria_data')) || {};
-        
         LIST_SATRIA.forEach(s => {
             container.innerHTML += `
                 <div class="satria-row" onclick="toggleInput('${s.id}')">
                     <span class="satria-name">${s.nama}</span>
-                    <span class="satria-id">${s.id}</span>
+                    <span class="satria-status" id="status-${s.id}">● Sudah Input</span>
                     <div id="input-area-${s.id}" class="input-area" onclick="event.stopPropagation()">
-                        <div class="input-field"><label>DELIVERY</label><input type="number" class="deliv-in" data-id="${s.id}" value="${savedData[`deliv_${s.id}`] || 0}" onfocus="clearZero(this)" oninput="calculate()"></div>
-                        <div class="input-field"><label>PICKUP</label><input type="number" class="pu-in" data-id="${s.id}" value="${savedData[`pu_${s.id}`] || 0}" onfocus="clearZero(this)" oninput="calculate()"></div>
-                        <div class="input-field"><label>PENDING</label><input type="number" class="pnd-in" data-id="${s.id}" value="${savedData[`pnd_${s.id}`] || 0}" onfocus="clearZero(this)" oninput="calculate()"></div>
+                        <div class="input-field"><label>DELIVERY</label><input type="number" id="deliv-${s.id}" value="0" onfocus="clearZero(this)"></div>
+                        <div class="input-field"><label>PICKUP</label><input type="number" id="pu-${s.id}" value="0" onfocus="clearZero(this)"></div>
+                        <div class="input-field"><label>PENDING</label><input type="number" id="pnd-${s.id}" value="0" onfocus="clearZero(this)"></div>
+                        <button class="btn-sync" onclick="saveToCloud('${s.id}')">SINKRONKAN DATA</button>
                     </div>
                 </div>`;
         });
-        document.getElementById('pending_val').value = localStorage.getItem('last_pending') || 0;
-        calculate();
+        loadFromCloud();
+        setInterval(loadFromCloud, 5000); // Sinkron otomatis tiap 5 detik
+    }
+
+    async function saveToCloud(id) {
+        const d = document.getElementById(`deliv-${id}`).value || 0;
+        const p = document.getElementById(`pu-${id}`).value || 0;
+        const n = document.getElementById(`pnd-${id}`).value || 0;
+        await fetch(`${FIREBASE_URL}satria/${id}.json`, { method: 'PUT', body: JSON.stringify({ deliv: d, pu: p, pnd: n }) });
+        alert("Data berhasil dikirim!");
+        toggleInput(id);
+    }
+
+    async function syncLeader() {
+        const data = {
+            pnd_kmrn: document.getElementById('pending_val').value || 0,
+            inbound: document.getElementById('inbound_val').value || 0,
+            dw_deliv: document.getElementById('deliv_dw').value || 0,
+            dw_pu: document.getElementById('pu_dw').value || 0,
+            cod: document.getElementById('cod').value || 0,
+            xrt: document.getElementById('xrt').value || 0,
+            ret: document.getElementById('return').value || 0,
+            f_pu: document.getElementById('failed_pu').value || 0
+        };
+        await fetch(`${FIREBASE_URL}leader.json`, { method: 'PUT', body: JSON.stringify(data) });
+    }
+
+    async function loadFromCloud() {
+        const resS = await fetch(`${FIREBASE_URL}satria.json`);
+        const allS = await resS.json() || {};
+        const resL = await fetch(`${FIREBASE_URL}leader.json`);
+        const lead = await resL.json() || {};
+
+        let tDelivS = 0, tPuS = 0, onDuty = 0;
+        LIST_SATRIA.forEach(s => {
+            const val = allS[s.id];
+            if(val) {
+                document.getElementById(`deliv-${s.id}`).value = val.deliv;
+                document.getElementById(`pu-${s.id}`).value = val.pu;
+                document.getElementById(`pnd-${s.id}`).value = val.pnd;
+                if(val.deliv > 0 || val.pu > 0) {
+                    onDuty++;
+                    document.getElementById(`status-${s.id}`).style.display = 'block';
+                }
+                tDelivS += parseInt(val.deliv) || 0;
+                tPuS += parseInt(val.pu) || 0;
+            }
+        });
+
+        const so = parseInt(lead.pnd_kmrn || 0) + parseInt(lead.inbound || 0);
+        const tDelivTotal = tDelivS + parseInt(lead.dw_deliv || 0);
+        
+        document.getElementById('res_so').innerText = so;
+        document.getElementById('res_tdeliv').innerText = tDelivTotal;
+        document.getElementById('res_failed').innerText = so - tDelivTotal;
+        document.getElementById('res_prod').innerText = (tDelivS / LIST_SATRIA.length).toFixed(2);
     }
 
     function clearZero(el) { if (el.value == "0") el.value = ""; }
-    
     function toggleInput(id) {
         const target = document.getElementById(`input-area-${id}`);
         const current = target.style.display;
         document.querySelectorAll('.input-area').forEach(el => el.style.display = 'none');
         target.style.display = current === 'grid' ? 'none' : 'grid';
     }
-
     function filterName() {
         const q = document.getElementById('searchName').value.toUpperCase();
         document.querySelectorAll('.satria-row').forEach(row => {
@@ -171,104 +218,55 @@
         });
     }
 
-    function calculate() {
-        let tDelivS = 0, tPuS = 0, onDuty = 0;
-        document.querySelectorAll('.deliv-in').forEach(el => {
-            let val = parseInt(el.value) || 0;
-            tDelivS += val; if (val > 0) onDuty++;
-        });
-        document.querySelectorAll('.pu-in').forEach(el => tPuS += parseInt(el.value) || 0);
-
-        const pending = parseInt(document.getElementById('pending_val').value) || 0;
-        const inbound = parseInt(document.getElementById('inbound_val').value) || 0;
-        const dDW = parseInt(document.getElementById('deliv_dw').value) || 0;
-        
-        const so = pending + inbound;
-        const totalDeliv = tDelivS + dDW;
-        const prod = (tDelivS / LIST_SATRIA.length).toFixed(2);
-
-        document.getElementById('res_so').innerText = so;
-        document.getElementById('res_tdeliv').innerText = totalDeliv;
-        document.getElementById('res_failed').innerText = so - totalDeliv;
-        document.getElementById('res_prod').innerText = prod;
-
-        return { tDelivS, tPuS, onDuty, so, totalDeliv, prod };
-    }
-
     async function sendLaporan() {
         const btn = document.getElementById('btn-main');
         btn.innerText = "MENGIRIM..."; btn.disabled = true;
+        await loadFromCloud();
 
-        const data = calculate();
         const tgl = document.getElementById('display-tgl').innerText;
-        const dDW = parseInt(document.getElementById('deliv_dw').value) || 0;
-        const puDW = parseInt(document.getElementById('pu_dw').value) || 0;
-        
-        // AMBIL DETAIL PER SATRIA UNTUK GSHEET
-        let detailSatria = [];
+        const so = document.getElementById('res_so').innerText;
+        const failed = document.getElementById('res_failed').innerText;
+        const tDelivS = document.getElementById('res_tdeliv').innerText;
+        const prod = document.getElementById('res_prod').innerText;
+        const pu = parseInt(document.getElementById('pu_dw').value || 0);
+
+        let detailS = [];
         LIST_SATRIA.forEach(s => {
-            const d = parseInt(document.querySelector(`.deliv-in[data-id="${s.id}"]`).value) || 0;
-            const p = parseInt(document.querySelector(`.pu-in[data-id="${s.id}"]`).value) || 0;
-            const n = parseInt(document.querySelector(`.pnd-in[data-id="${s.id}"]`).value) || 0;
-            if (d > 0 || p > 0 || n > 0) {
-                detailSatria.push({ nama: s.nama, deliv: d, pu: p, pending: n });
-            }
+            const d = document.getElementById(`deliv-${s.id}`).value;
+            if (d > 0) detailS.push({ nama: s.nama, deliv: d });
         });
 
-        const payload = { 
-            tgl: tgl, so: data.so, tDelivS: data.tDelivS, prod: data.prod, 
-            failed: (data.so - data.totalDeliv), tPuS: (data.tPuS + puDW), dw: dDW, 
-            onDuty: data.onDuty, detailSatria: detailSatria 
-        };
-
-        // KIRIM KE GOOGLE SHEET
+        // GSHEET
         try {
-            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-        } catch (e) { console.log("GSheet Error:", e); }
+            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ tgl, so, tDelivS, detailS }) });
+        } catch (e) {}
 
-        // FORMAT WA
+        // WA FORMAT
         let msg = `*BLHR0 - Gunungkidul*\n${tgl}\n\n`;
-        msg += `*So outs* : ${payload.so}\n`;
-        msg += `Prod Satria Mitra : ${payload.tDelivS}\n`;
-        msg += `Rata - rata delive satria : ${payload.prod}\n`;
+        msg += `*So outs* : ${so}\n`;
+        msg += `Prod Satria Mitra : ${tDelivS}\n`;
+        msg += `Rata - rata delive satria : ${prod}\n`;
         msg += `Prod Mitra Project : -\n`;
         msg += `Rata - rata delive satria project : -\n`;
-        msg += `Prod DW : ${dDW > 0 ? dDW : '-'}\n`;
-        msg += `Failed Delivery : ${payload.failed}\n`;
-        msg += `Pickup : ${payload.tPuS}\n`;
-        msg += `Failed pick up : ${document.getElementById('failed_pu').value}\n`;
-        msg += `Load COD : ${document.getElementById('cod').value}\n`;
-        msg += `XRT : ${document.getElementById('xrt').value}\n\n`;
+        msg += `Prod DW : ${document.getElementById('deliv_dw').value || '-'}\n`;
+        msg += `Failed Delivery : ${failed}\n`;
+        msg += `Pickup : ${pu}\n`;
+        msg += `Failed pick up : ${document.getElementById('failed_pu').value || 0}\n`;
+        msg += `Load COD : ${document.getElementById('cod').value || 0}\n`;
+        msg += `XRT : ${document.getElementById('xrt').value || 0}\n\n`;
         msg += `*Satria/DW Active*\n`;
         msg += `Active : ${LIST_SATRIA.length}\n`;
         msg += `Satria On Schedule : ${LIST_SATRIA.length}\n`;
-        msg += `On duty : ${payload.onDuty}\n`;
-        msg += `DW On : ${dDW > 0 ? '1' : '-'}`;
+        msg += `On duty : ${detailS.length}\n`;
+        msg += `DW On : ${pu > 0 ? '1' : '-'}`;
 
         window.open(`https://wa.me/6282210011917?text=${encodeURIComponent(msg)}`, '_blank');
-        btn.innerText = "KIRIM LAPORAN KE WA"; btn.disabled = false;
-    }
-
-    function saveLocalData() {
-        const data = {};
-        document.querySelectorAll('.deliv-in').forEach(el => data[`deliv_${el.dataset.id}`] = el.value);
-        document.querySelectorAll('.pu-in').forEach(el => data[`pu_${el.dataset.id}`] = el.value);
-        document.querySelectorAll('.pnd-in').forEach(el => data[`pnd_${el.dataset.id}`] = el.value);
-        localStorage.setItem('satria_data', JSON.stringify(data));
-        localStorage.setItem('last_pending', document.getElementById('pending_val').value);
-        alert("Data Tersimpan!");
+        btn.innerText = "KIRIM LAPORAN KE WA & GSHEET"; btn.disabled = false;
     }
 
     let isAuth = false;
-    function openLeaderModal() {
-        if (isAuth) switchTab('leader');
-        else document.getElementById('password-overlay').classList.remove('hidden');
-    }
-    function checkPassword() {
-        if (document.getElementById('pw_input').value === "888888") {
-            isAuth = true; document.getElementById('password-overlay').classList.add('hidden'); switchTab('leader');
-        } else alert("Salah!");
-    }
+    function openLeaderModal() { if (isAuth) switchTab('leader'); else document.getElementById('password-overlay').classList.remove('hidden'); }
+    function checkPassword() { if (document.getElementById('pw_input').value === "888888") { isAuth = true; document.getElementById('password-overlay').classList.add('hidden'); switchTab('leader'); } else alert("Salah!"); }
     function closeLeader() { document.getElementById('password-overlay').classList.add('hidden'); }
     function switchTab(tab) {
         document.getElementById('view-satria').classList.toggle('hidden', tab !== 'satria');
@@ -276,8 +274,8 @@
         document.getElementById('tab-satria').classList.toggle('active', tab === 'satria');
         document.getElementById('tab-leader').classList.toggle('active', tab === 'leader');
     }
-
     window.onload = init;
 </script>
 </body>
-</html>
+    </html>
+    
