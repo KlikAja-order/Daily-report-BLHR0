@@ -60,7 +60,7 @@
 <div class="container">
     <header>
         <h2 id="display-tgl"></h2>
-        <p style="color:var(--accent); font-weight: 600;">DAILY REPORT BLHR0</p>
+        <p style="color:var(--accent); font-weight: 600;">DAILY REPORT BLHR0 (REALTIME)</p>
     </header>
 
     <div class="tabs">
@@ -70,7 +70,7 @@
 
     <div id="view-satria">
         <div class="card" style="border: 1px solid var(--accent); background: rgba(56, 189, 248, 0.05);">
-            <div class="section-title">Hasil Realtime (Semua Satria)</div>
+            <div class="section-title">Monitoring Realtime</div>
             <div class="summary-grid">
                 <div><p class="summary-label">So Outs</p><p class="summary-val" id="res_so">0</p></div>
                 <div><p class="summary-label">Failed Deliv</p><p class="summary-val" id="res_failed" style="color:#ef4444">0</p></div>
@@ -128,10 +128,15 @@
         {id: "10078864", nama: "RUDIKUSMANTO"}
     ];
 
-    function init() {
+    function getReportDate() {
+        let skrg = new Date();
+        if (skrg.getHours() < 10) { skrg.setDate(skrg.getDate() - 1); }
         const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
-        document.getElementById('display-tgl').innerText = new Intl.DateTimeFormat('id-ID', options).format(new Date());
-        
+        return new Intl.DateTimeFormat('id-ID', options).format(skrg);
+    }
+
+    function init() {
+        document.getElementById('display-tgl').innerText = getReportDate();
         const container = document.getElementById('satria_list_container');
         LIST_SATRIA.forEach(s => {
             container.innerHTML += `
@@ -147,7 +152,7 @@
                 </div>`;
         });
         loadFromCloud();
-        setInterval(loadFromCloud, 5000); // Sinkron otomatis tiap 5 detik
+        setInterval(loadFromCloud, 5000);
     }
 
     async function saveToCloud(id) {
@@ -155,7 +160,7 @@
         const p = document.getElementById(`pu-${id}`).value || 0;
         const n = document.getElementById(`pnd-${id}`).value || 0;
         await fetch(`${FIREBASE_URL}satria/${id}.json`, { method: 'PUT', body: JSON.stringify({ deliv: d, pu: p, pnd: n }) });
-        alert("Data berhasil dikirim!");
+        alert("Data tersimpan!");
         toggleInput(id);
     }
 
@@ -186,12 +191,16 @@
                 document.getElementById(`deliv-${s.id}`).value = val.deliv;
                 document.getElementById(`pu-${s.id}`).value = val.pu;
                 document.getElementById(`pnd-${s.id}`).value = val.pnd;
-                if(val.deliv > 0 || val.pu > 0) {
+                if(parseInt(val.deliv) > 0 || parseInt(val.pu) > 0 || parseInt(val.pnd) > 0) {
                     onDuty++;
                     document.getElementById(`status-${s.id}`).style.display = 'block';
+                } else {
+                    document.getElementById(`status-${s.id}`).style.display = 'none';
                 }
                 tDelivS += parseInt(val.deliv) || 0;
                 tPuS += parseInt(val.pu) || 0;
+            } else {
+                document.getElementById(`status-${s.id}`).style.display = 'none';
             }
         });
 
@@ -201,7 +210,72 @@
         document.getElementById('res_so').innerText = so;
         document.getElementById('res_tdeliv').innerText = tDelivTotal;
         document.getElementById('res_failed').innerText = so - tDelivTotal;
-        document.getElementById('res_prod').innerText = (tDelivS / LIST_SATRIA.length).toFixed(2);
+        
+        // DASHBOARD PROD: (Deliv S + PU S) / On Duty
+        document.getElementById('res_prod').innerText = onDuty > 0 ? Math.round((tDelivS + tPuS) / onDuty) : 0;
+    }
+
+    async function sendLaporan() {
+        if(!confirm("Kirim laporan dan RESET dashboard? Data input Satria akan dihapus.")) return;
+        
+        const btn = document.getElementById('btn-main');
+        btn.innerText = "SEDANG MENGIRIM & RESET..."; btn.disabled = true;
+
+        const tgl = getReportDate();
+        const so = parseInt(document.getElementById('res_so').innerText) || 0;
+        const dw_d = parseInt(document.getElementById('deliv_dw').value) || 0;
+        const dw_p = parseInt(document.getElementById('pu_dw').value) || 0;
+
+        let totalDelivS = 0, totalPuS = 0, onDuty = 0, detailS = [];
+        LIST_SATRIA.forEach(s => {
+            const d = parseInt(document.getElementById(`deliv-${s.id}`).value) || 0;
+            const p = parseInt(document.getElementById(`pu-${s.id}`).value) || 0;
+            const n = parseInt(document.getElementById(`pnd-${s.id}`).value) || 0;
+            if (d > 0 || p > 0 || n > 0) {
+                onDuty++; 
+                totalDelivS += d; 
+                totalPuS += p;
+                detailS.push({ nama: s.nama, deliv: d, pu: p, pnd: n });
+            }
+        });
+
+        // RUMUS PROD SATRIA MITRA
+        const prodSatria = onDuty > 0 ? Math.round((totalDelivS + totalPuS) / onDuty) : 0;
+        const rataDeliv = onDuty > 0 ? Math.round(totalDelivS / LIST_SATRIA.length) : 0;
+        const tDelivTotal = totalDelivS + dw_d;
+
+        try {
+            await fetch(SCRIPT_URL, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                body: JSON.stringify({ tgl, so, tDelivS: tDelivTotal, detailS, prod: prodSatria }) 
+            });
+        } catch (e) {}
+
+        let msg = `*BLHR0 - Gunungkidul*\n${tgl}\n\n`;
+        msg += `*So outs* : ${so}\n`;
+        msg += `Prod Satria Mitra : ${prodSatria}\n`;
+        msg += `Rata - rata delive satria : ${rataDeliv}\n`;
+        msg += `Prod Mitra Project : -\n`;
+        msg += `Rata - rata delive satria project : -\n`;
+        msg += `Prod DW : ${dw_d > 0 ? dw_d : '-'}\n`;
+        msg += `Failed Delivery : ${so - tDelivTotal}\n`;
+        msg += `Pickup : ${totalPuS}\n`; // Khusus Satria Saja
+        msg += `Failed pick up : ${document.getElementById('failed_pu').value || 0}\n`;
+        msg += `Load COD : ${document.getElementById('cod').value || 0}\n`;
+        msg += `XRT : ${document.getElementById('xrt').value || 0}\n\n`;
+        msg += `*Satria/DW Active*\n`;
+        msg += `Active : ${LIST_SATRIA.length}\n`;
+        msg += `Satria On Schedule : ${LIST_SATRIA.length}\n`;
+        msg += `On duty : ${onDuty}\n`;
+        msg += `DW On : ${dw_d > 0 ? '1' : '-'}`;
+
+        // RESET FIREBASE TOTAL
+        await fetch(`${FIREBASE_URL}.json`, { method: 'DELETE' });
+
+        window.open(`https://wa.me/6282210011917?text=${encodeURIComponent(msg)}`, '_blank');
+        
+        setTimeout(() => { location.reload(); }, 2000);
     }
 
     function clearZero(el) { if (el.value == "0") el.value = ""; }
@@ -217,53 +291,6 @@
             row.style.display = row.querySelector('.satria-name').innerText.includes(q) ? 'block' : 'none';
         });
     }
-
-    async function sendLaporan() {
-        const btn = document.getElementById('btn-main');
-        btn.innerText = "MENGIRIM..."; btn.disabled = true;
-        await loadFromCloud();
-
-        const tgl = document.getElementById('display-tgl').innerText;
-        const so = document.getElementById('res_so').innerText;
-        const failed = document.getElementById('res_failed').innerText;
-        const tDelivS = document.getElementById('res_tdeliv').innerText;
-        const prod = document.getElementById('res_prod').innerText;
-        const pu = parseInt(document.getElementById('pu_dw').value || 0);
-
-        let detailS = [];
-        LIST_SATRIA.forEach(s => {
-            const d = document.getElementById(`deliv-${s.id}`).value;
-            if (d > 0) detailS.push({ nama: s.nama, deliv: d });
-        });
-
-        // GSHEET
-        try {
-            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ tgl, so, tDelivS, detailS }) });
-        } catch (e) {}
-
-        // WA FORMAT
-        let msg = `*BLHR0 - Gunungkidul*\n${tgl}\n\n`;
-        msg += `*So outs* : ${so}\n`;
-        msg += `Prod Satria Mitra : ${tDelivS}\n`;
-        msg += `Rata - rata delive satria : ${prod}\n`;
-        msg += `Prod Mitra Project : -\n`;
-        msg += `Rata - rata delive satria project : -\n`;
-        msg += `Prod DW : ${document.getElementById('deliv_dw').value || '-'}\n`;
-        msg += `Failed Delivery : ${failed}\n`;
-        msg += `Pickup : ${pu}\n`;
-        msg += `Failed pick up : ${document.getElementById('failed_pu').value || 0}\n`;
-        msg += `Load COD : ${document.getElementById('cod').value || 0}\n`;
-        msg += `XRT : ${document.getElementById('xrt').value || 0}\n\n`;
-        msg += `*Satria/DW Active*\n`;
-        msg += `Active : ${LIST_SATRIA.length}\n`;
-        msg += `Satria On Schedule : ${LIST_SATRIA.length}\n`;
-        msg += `On duty : ${detailS.length}\n`;
-        msg += `DW On : ${pu > 0 ? '1' : '-'}`;
-
-        window.open(`https://wa.me/6282210011917?text=${encodeURIComponent(msg)}`, '_blank');
-        btn.innerText = "KIRIM LAPORAN KE WA & GSHEET"; btn.disabled = false;
-    }
-
     let isAuth = false;
     function openLeaderModal() { if (isAuth) switchTab('leader'); else document.getElementById('password-overlay').classList.remove('hidden'); }
     function checkPassword() { if (document.getElementById('pw_input').value === "888888") { isAuth = true; document.getElementById('password-overlay').classList.add('hidden'); switchTab('leader'); } else alert("Salah!"); }
@@ -277,5 +304,7 @@
     window.onload = init;
 </script>
 </body>
-    </html>
+</html>
+
     
+
