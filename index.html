@@ -9,6 +9,7 @@
         :root {
             --bg: #0f172a; --card: rgba(30, 41, 59, 0.7); --accent: #38bdf8;
             --text: #f1f5f9; --text-dim: #94a3b8; --border: rgba(255, 255, 255, 0.1);
+            --success: #22c55e; --danger: #ef4444;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
         body { background: var(--bg); color: var(--text); padding: 15px; padding-bottom: 100px; }
@@ -26,11 +27,16 @@
         .summary-val { font-size: 1.1rem; font-weight: 700; }
 
         .search-input { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid var(--accent); background: rgba(15, 23, 42, 0.5); color: white; font-size: 1rem; outline: none; margin-bottom: 15px; }
-        .satria-row { border-bottom: 1px solid var(--border); padding: 15px 5px; cursor: pointer; }
-        .satria-name { font-size: 1.15rem; font-weight: 600; display: block; color: white; }
-        .satria-status { font-size: 0.7rem; color: #22c55e; font-weight: 700; display: none; margin-top: 4px; }
         
-        .input-area { display: none; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; }
+        .satria-row { border-bottom: 1px solid var(--border); padding: 15px 10px; cursor: pointer; transition: 0.3s; border-radius: 10px; margin-bottom: 5px; }
+        .satria-row:active { background: rgba(255, 255, 255, 0.05); }
+        /* Style baris jika sudah input */
+        .satria-row.inputted { background: rgba(34, 197, 94, 0.08); border-left: 4px solid var(--success); }
+        
+        .satria-name { font-size: 1.05rem; font-weight: 600; display: block; color: white; }
+        .satria-status { font-size: 0.7rem; color: var(--success); font-weight: 800; display: none; margin-top: 4px; text-transform: uppercase; }
+        
+        .input-area { display: none; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; }
         .input-field { display: flex; flex-direction: column; align-items: center; }
         .input-field label { font-size: 0.65rem; color: var(--accent); margin-bottom: 5px; font-weight: 700; }
         
@@ -48,7 +54,7 @@
 
 <div id="password-overlay" class="hidden">
     <div class="modal-pw">
-        <h3>🔒 Akses Leader</h3>
+        <h3>🔐 Akses Leader</h3>
         <input type="password" id="pw_input" placeholder="Pin" style="margin: 20px 0; text-align: center; letter-spacing: 8px; width:100%; padding:10px; border-radius:8px; border:none;">
         <div style="display: flex; gap: 10px;">
             <button onclick="closeLeader()" style="flex:1; padding:12px; background:#475569; color:white; border:none; border-radius:8px;">Batal</button>
@@ -59,7 +65,7 @@
 
 <div class="container">
     <header>
-        <h2 id="display-tgl"></h2>
+        <h2 id="display-tgl">Memuat Tanggal...</h2>
         <p style="color:var(--accent); font-weight: 600;">DAILY REPORT BLHR0 (REALTIME)</p>
     </header>
 
@@ -73,8 +79,8 @@
             <div class="section-title">Monitoring Realtime</div>
             <div class="summary-grid">
                 <div><p class="summary-label">So Outs</p><p class="summary-val" id="res_so">0</p></div>
-                <div><p class="summary-label">Failed Deliv</p><p class="summary-val" id="res_failed" style="color:#ef4444">0</p></div>
-                <div><p class="summary-label">Total Deliv</p><p class="summary-val" id="res_tdeliv" style="color:#22c55e">0</p></div>
+                <div><p class="summary-label">Failed Deliv</p><p class="summary-val" id="res_failed" style="color:var(--danger)">0</p></div>
+                <div><p class="summary-label">Total Deliv</p><p class="summary-val" id="res_tdeliv" style="color:var(--success)">0</p></div>
                 <div><p class="summary-label">Prod Satria</p><p class="summary-val" id="res_prod">0</p></div>
             </div>
         </div>
@@ -98,7 +104,7 @@
             <div class="section-title">2. Daily Worker (DW)</div>
             <div style="display:flex; gap:10px">
                 <div style="flex:1"><label class="summary-label">Deliv DW</label><input type="number" id="deliv_dw" value="0" onfocus="clearZero(this)" onchange="syncLeader()"></div>
-                <div style="flex:1"><label class="summary-label">Pickup DW</label><input type="number" id="pu_dw" value="0" onfocus="clearZero(this)" onchange="syncLeader()"></div>
+                <div style="flex:1"><label class="summary-label">Jml DW Aktif</label><input type="number" id="dw_count" value="0" onfocus="clearZero(this)" onchange="syncLeader()"></div>
             </div>
         </div>
         <div class="card">
@@ -115,8 +121,9 @@
 </div>
 
 <script>
+    // MASUKKAN URL ANDA DI SINI
     const FIREBASE_URL = "https://dashboard-blhr0-default-rtdb.asia-southeast1.firebasedatabase.app/";
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw-ivA449QOFpM4yv3PN5zfAcX4WgnYWkmUnc9ddIXrB62KVkIXnvWGWNu4-rcbDitYog/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx8VaqAvwam3aOjFyReh4BuIF9ai_lgXmz2wRV0fiOiyqSFx1gDobtWZJq-AQtMbuvm4A/exec";
     
     const LIST_SATRIA = [
         {id: "10078570", nama: "AHMAD KHOIRUL ANAAM"}, {id: "10070223", nama: "ARIF PRASETYO"},
@@ -128,21 +135,31 @@
         {id: "10078864", nama: "RUDIKUSMANTO"}
     ];
 
-    function getReportDate() {
-        let skrg = new Date();
-        if (skrg.getHours() < 10) { skrg.setDate(skrg.getDate() - 1); }
+    let currentLockedDate = "";
+
+    function formatTanggal(dateObj) {
         const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
-        return new Intl.DateTimeFormat('id-ID', options).format(skrg);
+        return new Intl.DateTimeFormat('id-ID', options).format(dateObj);
     }
 
-    function init() {
-        document.getElementById('display-tgl').innerText = getReportDate();
+    async function init() {
+        const resL = await fetch(`${FIREBASE_URL}leader.json`);
+        const lead = await resL.json() || {};
+        
+        if (lead.locked_date) {
+            currentLockedDate = lead.locked_date;
+        } else {
+            currentLockedDate = formatTanggal(new Date());
+            await fetch(`${FIREBASE_URL}leader/locked_date.json`, { method: 'PUT', body: JSON.stringify(currentLockedDate) });
+        }
+        document.getElementById('display-tgl').innerText = currentLockedDate;
+
         const container = document.getElementById('satria_list_container');
         LIST_SATRIA.forEach(s => {
             container.innerHTML += `
-                <div class="satria-row" onclick="toggleInput('${s.id}')">
+                <div class="satria-row" id="row-${s.id}" onclick="toggleInput('${s.id}')">
                     <span class="satria-name">${s.nama}</span>
-                    <span class="satria-status" id="status-${s.id}">● Sudah Input</span>
+                    <span class="satria-status" id="status-${s.id}">✅ Sudah Input</span>
                     <div id="input-area-${s.id}" class="input-area" onclick="event.stopPropagation()">
                         <div class="input-field"><label>DELIVERY</label><input type="number" id="deliv-${s.id}" value="0" onfocus="clearZero(this)"></div>
                         <div class="input-field"><label>PICKUP</label><input type="number" id="pu-${s.id}" value="0" onfocus="clearZero(this)"></div>
@@ -156,126 +173,134 @@
     }
 
     async function saveToCloud(id) {
-        const d = document.getElementById(`deliv-${id}`).value || 0;
-        const p = document.getElementById(`pu-${id}`).value || 0;
-        const n = document.getElementById(`pnd-${id}`).value || 0;
+        const d = parseInt(document.getElementById(`deliv-${id}`).value) || 0;
+        const p = parseInt(document.getElementById(`pu-${id}`).value) || 0;
+        const n = parseInt(document.getElementById(`pnd-${id}`).value) || 0;
         await fetch(`${FIREBASE_URL}satria/${id}.json`, { method: 'PUT', body: JSON.stringify({ deliv: d, pu: p, pnd: n }) });
-        alert("Data tersimpan!");
+        alert("Data Tersinkron ke Dashboard!");
         toggleInput(id);
     }
 
     async function syncLeader() {
         const data = {
-            pnd_kmrn: document.getElementById('pending_val').value || 0,
-            inbound: document.getElementById('inbound_val').value || 0,
-            dw_deliv: document.getElementById('deliv_dw').value || 0,
-            dw_pu: document.getElementById('pu_dw').value || 0,
-            cod: document.getElementById('cod').value || 0,
-            xrt: document.getElementById('xrt').value || 0,
-            ret: document.getElementById('return').value || 0,
-            f_pu: document.getElementById('failed_pu').value || 0
+            pnd_kmrn: parseInt(document.getElementById('pending_val').value) || 0,
+            inbound: parseInt(document.getElementById('inbound_val').value) || 0,
+            dw_deliv: parseInt(document.getElementById('deliv_dw').value) || 0,
+            dw_count: parseInt(document.getElementById('dw_count').value) || 0,
+            cod: parseInt(document.getElementById('cod').value) || 0,
+            xrt: parseInt(document.getElementById('xrt').value) || 0,
+            ret: parseInt(document.getElementById('return').value) || 0,
+            f_pu: parseInt(document.getElementById('failed_pu').value) || 0,
+            locked_date: currentLockedDate
         };
         await fetch(`${FIREBASE_URL}leader.json`, { method: 'PUT', body: JSON.stringify(data) });
     }
 
     async function loadFromCloud() {
+        try {
+            const resS = await fetch(`${FIREBASE_URL}satria.json`);
+            const allS = await resS.json() || {};
+            const resL = await fetch(`${FIREBASE_URL}leader.json`);
+            const lead = await resL.json() || {};
+
+            document.getElementById('pending_val').value = lead.pnd_kmrn || 0;
+            document.getElementById('inbound_val').value = lead.inbound || 0;
+            document.getElementById('deliv_dw').value = lead.dw_deliv || 0;
+            document.getElementById('dw_count').value = lead.dw_count || 0;
+
+            let tDelivS = 0, tPuS = 0, onDuty = 0;
+            LIST_SATRIA.forEach(s => {
+                const val = allS[s.id];
+                const rowEl = document.getElementById(`row-${s.id}`);
+                const statusEl = document.getElementById(`status-${s.id}`);
+                if(val) {
+                    const isInputted = (val.deliv > 0 || val.pu > 0 || val.pnd > 0);
+                    statusEl.style.display = isInputted ? 'block' : 'none';
+                    if(isInputted) {
+                        rowEl.classList.add('inputted');
+                        onDuty++;
+                        tDelivS += parseInt(val.deliv);
+                        tPuS += parseInt(val.pu);
+                    } else {
+                        rowEl.classList.remove('inputted');
+                    }
+                }
+            });
+
+            const so = (parseInt(lead.pnd_kmrn) || 0) + (parseInt(lead.inbound) || 0);
+            const tDelivTotal = tDelivS + (parseInt(lead.dw_deliv) || 0);
+            
+            document.getElementById('res_so').innerText = so;
+            document.getElementById('res_tdeliv').innerText = tDelivTotal;
+            document.getElementById('res_failed').innerText = so - tDelivTotal;
+            document.getElementById('res_prod').innerText = onDuty > 0 ? Math.round((tDelivS + tPuS) / onDuty) : 0;
+        } catch (e) {}
+    }
+
+    async function sendLaporan() {
+        if(!confirm("Kirim laporan dan RESET dashboard? Data akan disimpan ke GSheet.")) return;
+        
+        const btn = document.getElementById('btn-main');
+        btn.innerText = "SEDANG MENGIRIM..."; btn.disabled = true;
+
         const resS = await fetch(`${FIREBASE_URL}satria.json`);
         const allS = await resS.json() || {};
         const resL = await fetch(`${FIREBASE_URL}leader.json`);
         const lead = await resL.json() || {};
 
-        let tDelivS = 0, tPuS = 0, onDuty = 0;
+        let tDelivS = 0, tPuS = 0, onDuty = 0, detailS = [];
         LIST_SATRIA.forEach(s => {
-            const val = allS[s.id];
-            if(val) {
-                document.getElementById(`deliv-${s.id}`).value = val.deliv;
-                document.getElementById(`pu-${s.id}`).value = val.pu;
-                document.getElementById(`pnd-${s.id}`).value = val.pnd;
-                if(parseInt(val.deliv) > 0 || parseInt(val.pu) > 0 || parseInt(val.pnd) > 0) {
-                    onDuty++;
-                    document.getElementById(`status-${s.id}`).style.display = 'block';
-                } else {
-                    document.getElementById(`status-${s.id}`).style.display = 'none';
-                }
-                tDelivS += parseInt(val.deliv) || 0;
-                tPuS += parseInt(val.pu) || 0;
-            } else {
-                document.getElementById(`status-${s.id}`).style.display = 'none';
+            const val = allS[s.id] || {deliv:0, pu:0, pnd:0};
+            if(val.deliv > 0 || val.pu > 0 || val.pnd > 0) {
+                onDuty++;
+                tDelivS += parseInt(val.deliv); tPuS += parseInt(val.pu);
+                detailS.push({ tgl: currentLockedDate, nama: s.nama, deliv: val.deliv, pu: val.pu, pnd: val.pnd });
             }
         });
 
-        const so = parseInt(lead.pnd_kmrn || 0) + parseInt(lead.inbound || 0);
-        const tDelivTotal = tDelivS + parseInt(lead.dw_deliv || 0);
-        
-        document.getElementById('res_so').innerText = so;
-        document.getElementById('res_tdeliv').innerText = tDelivTotal;
-        document.getElementById('res_failed').innerText = so - tDelivTotal;
-        
-        // DASHBOARD PROD: (Deliv S + PU S) / On Duty
-        document.getElementById('res_prod').innerText = onDuty > 0 ? Math.round((tDelivS + tPuS) / onDuty) : 0;
-    }
+        const so = (parseInt(lead.pnd_kmrn) || 0) + (parseInt(lead.inbound) || 0);
+        const dw_d = parseInt(lead.dw_deliv) || 0;
+        const dw_c = parseInt(lead.dw_count) || 0;
+        const tDelivTotal = tDelivS + dw_d;
+        const prodSatria = onDuty > 0 ? Math.round((tDelivS + tPuS) / onDuty) : 0;
+        const rataDeliv = onDuty > 0 ? Math.round(tDelivS / onDuty) : 0;
+        const prodDW = dw_c > 0 ? Math.round(dw_d / dw_c) : "-";
 
-    async function sendLaporan() {
-        if(!confirm("Kirim laporan dan RESET dashboard? Data input Satria akan dihapus.")) return;
-        
-        const btn = document.getElementById('btn-main');
-        btn.innerText = "SEDANG MENGIRIM & RESET..."; btn.disabled = true;
+        const payload = {
+            tgl: currentLockedDate, so, tDelivS, tPuS, onDuty,
+            prodSatria, rataDeliv, failed_deliv: so - tDelivTotal,
+            dw_d, dw_c, cod: lead.cod || 0, xrt: lead.xrt || 0, f_pu: lead.f_pu || 0,
+            detailSatria: detailS
+        };
 
-        const tgl = getReportDate();
-        const so = parseInt(document.getElementById('res_so').innerText) || 0;
-        const dw_d = parseInt(document.getElementById('deliv_dw').value) || 0;
-        const dw_p = parseInt(document.getElementById('pu_dw').value) || 0;
+        // GSheet
+        await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
 
-        let totalDelivS = 0, totalPuS = 0, onDuty = 0, detailS = [];
-        LIST_SATRIA.forEach(s => {
-            const d = parseInt(document.getElementById(`deliv-${s.id}`).value) || 0;
-            const p = parseInt(document.getElementById(`pu-${s.id}`).value) || 0;
-            const n = parseInt(document.getElementById(`pnd-${s.id}`).value) || 0;
-            if (d > 0 || p > 0 || n > 0) {
-                onDuty++; 
-                totalDelivS += d; 
-                totalPuS += p;
-                detailS.push({ nama: s.nama, deliv: d, pu: p, pnd: n });
-            }
-        });
-
-        // RUMUS PROD SATRIA MITRA
-        const prodSatria = onDuty > 0 ? Math.round((totalDelivS + totalPuS) / onDuty) : 0;
-        const rataDeliv = onDuty > 0 ? Math.round(totalDelivS / LIST_SATRIA.length) : 0;
-        const tDelivTotal = totalDelivS + dw_d;
-
-        try {
-            await fetch(SCRIPT_URL, { 
-                method: 'POST', 
-                mode: 'no-cors', 
-                body: JSON.stringify({ tgl, so, tDelivS: tDelivTotal, detailS, prod: prodSatria }) 
-            });
-        } catch (e) {}
-
-        let msg = `*BLHR0 - Gunungkidul*\n${tgl}\n\n`;
-        msg += `*So outs* : ${so}\n`;
+        // WA
+        let msg = `*BLHR0 - Gunungkidul*\n${currentLockedDate}\n\n`;
+        msg += `*So outs*: ${so}\n`;
         msg += `Prod Satria Mitra : ${prodSatria}\n`;
         msg += `Rata - rata delive satria : ${rataDeliv}\n`;
         msg += `Prod Mitra Project : -\n`;
         msg += `Rata - rata delive satria project : -\n`;
-        msg += `Prod DW : ${dw_d > 0 ? dw_d : '-'}\n`;
+        msg += `Prod DW : ${prodDW}\n`;
         msg += `Failed Delivery : ${so - tDelivTotal}\n`;
-        msg += `Pickup : ${totalPuS}\n`; // Khusus Satria Saja
-        msg += `Failed pick up : ${document.getElementById('failed_pu').value || 0}\n`;
-        msg += `Load COD : ${document.getElementById('cod').value || 0}\n`;
-        msg += `XRT : ${document.getElementById('xrt').value || 0}\n\n`;
+        msg += `Pickup : ${tPuS}\n`;
+        msg += `Failed pick up : ${lead.f_pu || 0}\n`;
+        msg += `Load COD : ${lead.cod || 0}\n`;
+        msg += `XRT : ${lead.xrt || 0}\n\n`;
         msg += `*Satria/DW Active*\n`;
         msg += `Active : ${LIST_SATRIA.length}\n`;
         msg += `Satria On Schedule : ${LIST_SATRIA.length}\n`;
         msg += `On duty : ${onDuty}\n`;
-        msg += `DW On : ${dw_d > 0 ? '1' : '-'}`;
+        msg += `DW On : ${dw_c > 0 ? dw_c : '-'}`;
 
-        // RESET FIREBASE TOTAL
-        await fetch(`${FIREBASE_URL}.json`, { method: 'DELETE' });
+        // Reset
+        await fetch(`${FIREBASE_URL}satria.json`, { method: 'DELETE' });
+        await fetch(`${FIREBASE_URL}leader.json`, { method: 'DELETE' });
 
         window.open(`https://wa.me/6282210011917?text=${encodeURIComponent(msg)}`, '_blank');
-        
-        setTimeout(() => { location.reload(); }, 2000);
+        location.reload();
     }
 
     function clearZero(el) { if (el.value == "0") el.value = ""; }
@@ -288,12 +313,13 @@
     function filterName() {
         const q = document.getElementById('searchName').value.toUpperCase();
         document.querySelectorAll('.satria-row').forEach(row => {
-            row.style.display = row.querySelector('.satria-name').innerText.includes(q) ? 'block' : 'none';
+            const name = row.querySelector('.satria-name').innerText.toUpperCase();
+            row.style.display = name.includes(q) ? 'block' : 'none';
         });
     }
     let isAuth = false;
     function openLeaderModal() { if (isAuth) switchTab('leader'); else document.getElementById('password-overlay').classList.remove('hidden'); }
-    function checkPassword() { if (document.getElementById('pw_input').value === "888888") { isAuth = true; document.getElementById('password-overlay').classList.add('hidden'); switchTab('leader'); } else alert("Salah!"); }
+    function checkPassword() { if (document.getElementById('pw_input').value === "888888") { isAuth = true; document.getElementById('password-overlay').classList.add('hidden'); switchTab('leader'); } else alert("Pin Salah!"); }
     function closeLeader() { document.getElementById('password-overlay').classList.add('hidden'); }
     function switchTab(tab) {
         document.getElementById('view-satria').classList.toggle('hidden', tab !== 'satria');
@@ -304,7 +330,5 @@
     window.onload = init;
 </script>
 </body>
-</html>
-
-    
-
+    </html>
+                                        
