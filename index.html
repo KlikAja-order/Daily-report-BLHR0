@@ -107,7 +107,14 @@
             </div>
         </div>
         <div class="card">
-            <div class="section-title">3. Data Pendukung</div>
+            <div class="section-title">3. Mitra Project</div>
+            <div style="display:flex; gap:10px">
+                <div style="flex:1"><label class="summary-label">Deliv Project</label><input type="number" id="deliv_project" value="0" onfocus="clearZero(this)" onchange="syncLeader()"></div>
+                <div style="flex:1"><label class="summary-label">Jml Project Aktif</label><input type="number" id="project_count" value="0" onfocus="clearZero(this)" onchange="syncLeader()"></div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="section-title">4. Data Pendukung</div>
             <div class="summary-grid">
                 <div><label class="summary-label">Load COD</label><input type="number" id="cod" value="0" onfocus="clearZero(this)" onchange="syncLeader()"></div>
                 <div><label class="summary-label">XRT</label><input type="number" id="xrt" value="0" onfocus="clearZero(this)" onchange="syncLeader()"></div>
@@ -186,6 +193,8 @@
             inbound: parseInt(document.getElementById('inbound_val').value) || 0,
             dw_deliv: parseInt(document.getElementById('deliv_dw').value) || 0,
             dw_count: parseInt(document.getElementById('dw_count').value) || 0,
+            project_deliv: parseInt(document.getElementById('deliv_project').value) || 0,
+            project_count: parseInt(document.getElementById('project_count').value) || 0,
             cod: parseInt(document.getElementById('cod').value) || 0,
             xrt: parseInt(document.getElementById('xrt').value) || 0,
             ret: parseInt(document.getElementById('return').value) || 0,
@@ -205,6 +214,7 @@
             const leaderFields = [
                 {id: 'pending_val', key: 'pnd_kmrn'}, {id: 'inbound_val', key: 'inbound'},
                 {id: 'deliv_dw', key: 'dw_deliv'}, {id: 'dw_count', key: 'dw_count'},
+                {id: 'deliv_project', key: 'project_deliv'}, {id: 'project_count', key: 'project_count'},
                 {id: 'cod', key: 'cod'}, {id: 'xrt', key: 'xrt'},
                 {id: 'return', key: 'ret'}, {id: 'failed_pu', key: 'f_pu'}
             ];
@@ -240,7 +250,10 @@
             });
 
             const so = (parseInt(lead.pnd_kmrn) || 0) + (parseInt(lead.inbound) || 0);
-            const tDelivTotal = tDelivS + (parseInt(lead.dw_deliv) || 0);
+            const dw_d = parseInt(lead.dw_deliv) || 0;
+            const prj_d = parseInt(lead.project_deliv) || 0;
+            const tDelivTotal = tDelivS + dw_d + prj_d;
+            
             document.getElementById('res_so').innerText = so;
             document.getElementById('res_tdeliv').innerText = tDelivTotal;
             document.getElementById('res_failed').innerText = so - tDelivTotal;
@@ -248,7 +261,7 @@
         } catch (e) { console.log("Refresh..."); }
     }
 
-        async function sendLaporan() {
+    async function sendLaporan() {
         if(!confirm("Kirim laporan dan RESET dashboard?")) return;
         const btn = document.getElementById('btn-main');
         btn.innerText = "SEDANG MENGIRIM..."; btn.disabled = true;
@@ -270,32 +283,35 @@
         const so = (parseInt(lead.pnd_kmrn) || 0) + (parseInt(lead.inbound) || 0);
         const dw_d = parseInt(lead.dw_deliv) || 0;
         const dw_c = parseInt(lead.dw_count) || 0;
-        const tDelivTotal = tDelivS + dw_d;
-        
-        // Kalkulasi Statistik
+        const prj_d = parseInt(lead.project_deliv) || 0;
+        const prj_c = parseInt(lead.project_count) || 0;
+
+        const tDelivTotal = tDelivS + dw_d + prj_d;
         const prodSatria = onDuty > 0 ? Math.round((tDelivS + tPuS) / onDuty) : 0;
         const rataDeliv = onDuty > 0 ? Math.round(tDelivS / onDuty) : 0;
+        
         const prodDW = dw_c > 0 ? Math.round(dw_d / dw_c) : "-";
-        const failedDeliv = so - tDelivTotal;
+        const prodPrj = prj_c > 0 ? Math.round(prj_d / prj_c) : "-";
+        const rataPrj = prj_c > 0 ? Math.round(prj_d / prj_c) : "-";
 
-        // Kirim ke Google Sheets
         const payload = {
             tgl: currentLockedDate, so, tDelivS, tPuS, onDuty,
-            prodSatria, rataDeliv, failed_deliv: failedDeliv,
+            prodSatria, rataDeliv, failed_deliv: so - tDelivTotal,
             dw_d, dw_c, cod: lead.cod || 0, xrt: lead.xrt || 0, f_pu: lead.f_pu || 0,
             detailSatria: detailS
         };
+
         await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
 
-        // FORMAT PESAN WHATSAPP BARU
+        // FORMAT WHATSAPP SESUAI PERMINTAAN
         let msg = `*BLHR0 - Gunungkidul*\n${currentLockedDate}\n\n`;
         msg += `*So outs*: ${so}\n`;
         msg += `Prod Satria Mitra : ${prodSatria}\n`;
         msg += `Rata - rata delive satria : ${rataDeliv}\n`;
-        msg += `Prod Mitra Project : -\n`;
-        msg += `Rata - rata delive satria project : -\n`;
+        msg += `Prod Mitra Project : ${prodPrj}\n`;
+        msg += `Rata - rata delive satria project : ${rataPrj}\n`;
         msg += `Prod DW : ${prodDW}\n`;
-        msg += `Failed Delivery : ${failedDeliv}\n`;
+        msg += `Failed Delivery : ${so - tDelivTotal}\n`;
         msg += `Pickup : ${tPuS}\n`;
         msg += `Failed pick up : ${lead.f_pu || 0}\n`;
         msg += `Load COD : ${lead.cod || 0}\n`;
@@ -307,7 +323,6 @@
         msg += `On duty : ${onDuty}\n`;
         msg += `DW On : ${dw_c > 0 ? dw_c : '-'}`;
 
-        // Reset & Buka WA
         await fetch(`${FIREBASE_URL}satria.json`, { method: 'DELETE' });
         await fetch(`${FIREBASE_URL}leader.json`, { method: 'DELETE' });
 
@@ -343,4 +358,3 @@
 </script>
 </body>
 </html>
-
