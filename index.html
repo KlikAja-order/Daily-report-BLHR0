@@ -248,7 +248,7 @@
         } catch (e) { console.log("Refresh..."); }
     }
 
-    async function sendLaporan() {
+        async function sendLaporan() {
         if(!confirm("Kirim laporan dan RESET dashboard?")) return;
         const btn = document.getElementById('btn-main');
         btn.innerText = "SEDANG MENGIRIM..."; btn.disabled = true;
@@ -271,22 +271,43 @@
         const dw_d = parseInt(lead.dw_deliv) || 0;
         const dw_c = parseInt(lead.dw_count) || 0;
         const tDelivTotal = tDelivS + dw_d;
+        
+        // Kalkulasi Statistik
         const prodSatria = onDuty > 0 ? Math.round((tDelivS + tPuS) / onDuty) : 0;
         const rataDeliv = onDuty > 0 ? Math.round(tDelivS / onDuty) : 0;
         const prodDW = dw_c > 0 ? Math.round(dw_d / dw_c) : "-";
+        const failedDeliv = so - tDelivTotal;
 
+        // Kirim ke Google Sheets
         const payload = {
             tgl: currentLockedDate, so, tDelivS, tPuS, onDuty,
-            prodSatria, rataDeliv, failed_deliv: so - tDelivTotal,
+            prodSatria, rataDeliv, failed_deliv: failedDeliv,
             dw_d, dw_c, cod: lead.cod || 0, xrt: lead.xrt || 0, f_pu: lead.f_pu || 0,
             detailSatria: detailS
         };
-
         await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
 
+        // FORMAT PESAN WHATSAPP BARU
         let msg = `*BLHR0 - Gunungkidul*\n${currentLockedDate}\n\n`;
-        msg += `*So outs*: ${so}\nProd Satria Mitra : ${prodSatria}\nRata - rata delive satria : ${rataDeliv}\nProd DW : ${prodDW}\nFailed Delivery : ${so - tDelivTotal}\nPickup : ${tPuS}\nFailed pick up : ${lead.f_pu || 0}\nLoad COD : ${lead.cod || 0}\nXRT : ${lead.xrt || 0}\n\n*Satria/DW Active*\nActive : ${LIST_SATRIA.length}\nOn duty : ${onDuty}\nDW On : ${dw_c > 0 ? dw_c : '-'}`;
+        msg += `*So outs*: ${so}\n`;
+        msg += `Prod Satria Mitra : ${prodSatria}\n`;
+        msg += `Rata - rata delive satria : ${rataDeliv}\n`;
+        msg += `Prod Mitra Project : -\n`;
+        msg += `Rata - rata delive satria project : -\n`;
+        msg += `Prod DW : ${prodDW}\n`;
+        msg += `Failed Delivery : ${failedDeliv}\n`;
+        msg += `Pickup : ${tPuS}\n`;
+        msg += `Failed pick up : ${lead.f_pu || 0}\n`;
+        msg += `Load COD : ${lead.cod || 0}\n`;
+        msg += `XRT : ${lead.xrt || 0}\n\n`;
+        
+        msg += `*Satria/DW Active*\n`;
+        msg += `Active : ${LIST_SATRIA.length}\n`;
+        msg += `Satria On Schedule : ${LIST_SATRIA.length}\n`;
+        msg += `On duty : ${onDuty}\n`;
+        msg += `DW On : ${dw_c > 0 ? dw_c : '-'}`;
 
+        // Reset & Buka WA
         await fetch(`${FIREBASE_URL}satria.json`, { method: 'DELETE' });
         await fetch(`${FIREBASE_URL}leader.json`, { method: 'DELETE' });
 
@@ -322,3 +343,4 @@
 </script>
 </body>
 </html>
+
