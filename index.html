@@ -12,37 +12,32 @@
             --success: #22c55e; --danger: #ef4444;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background: var(--bg); color: var(--text); padding: 15px; padding-bottom: 100px; }
+        body { background: var(--bg); color: var(--text); padding: 15px; padding-bottom: 150px; }
         .container { max-width: 600px; margin: auto; }
         header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
         .card { background: var(--card); backdrop-filter: blur(10px); border: 1px solid var(--border); border-radius: 16px; padding: 18px; margin-bottom: 15px; }
         .section-title { font-size: 0.85rem; font-weight: 700; margin-bottom: 12px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
-        
         .tabs { display: flex; gap: 10px; margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 12px; }
         .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; background: transparent; color: var(--text-dim); cursor: pointer; font-weight: 700; transition: 0.3s; }
         .tab-btn.active { background: var(--accent); color: white; }
-
         .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px; }
         .summary-label { font-size: 0.75rem; color: var(--text-dim); }
         .summary-val { font-size: 1.1rem; font-weight: 700; }
-
         .search-input { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid var(--accent); background: rgba(15, 23, 42, 0.5); color: white; font-size: 1rem; outline: none; margin-bottom: 15px; }
-        
         .satria-row { border-bottom: 1px solid var(--border); padding: 15px 10px; cursor: pointer; transition: 0.3s; border-radius: 10px; margin-bottom: 5px; }
-        .satria-row:active { background: rgba(255, 255, 255, 0.05); }
         .satria-row.inputted { background: rgba(34, 197, 94, 0.08); border-left: 4px solid var(--success); }
-        
         .satria-name { font-size: 1.05rem; font-weight: 600; display: block; color: white; }
         .satria-status { font-size: 0.7rem; color: var(--success); font-weight: 800; display: none; margin-top: 4px; text-transform: uppercase; }
-        
         .input-area { display: none; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; }
         .input-field { display: flex; flex-direction: column; align-items: center; }
         .input-field label { font-size: 0.65rem; color: var(--accent); margin-bottom: 5px; font-weight: 700; }
-        
         input[type="number"] { background: #1e293b; border: 1px solid var(--border); border-radius: 6px; color: white; padding: 12px 5px; outline: none; width: 100%; font-size: 1.2rem; text-align: center; font-weight: 700; }
-        
         .btn-sync { grid-column: span 3; background: var(--accent); color: #0f172a; border: none; padding: 12px; border-radius: 8px; font-weight: 800; margin-top: 10px; cursor: pointer; }
-        .btn-send { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 560px; background: linear-gradient(135deg, #22c55e, #16a34a); color: white; border: none; padding: 18px; border-radius: 50px; font-weight: 700; font-size: 1rem; cursor: pointer; box-shadow: 0 10px 20px rgba(22, 163, 74, 0.3); z-index: 100; }
+        
+        /* Fixed Buttons Container */
+        .admin-actions { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 560px; display: flex; flex-direction: column; gap: 10px; z-index: 100; }
+        .btn-send { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; border: none; padding: 18px; border-radius: 50px; font-weight: 700; font-size: 1rem; cursor: pointer; box-shadow: 0 10px 20px rgba(22, 163, 74, 0.3); }
+        .btn-reset { background: #1e293b; color: #ef4444; border: 1px solid #ef4444; padding: 12px; border-radius: 50px; font-weight: 700; font-size: 0.8rem; cursor: pointer; }
         
         .hidden { display: none !important; }
         #password-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.98); display: flex; align-items: center; justify-content: center; z-index: 9999; }
@@ -83,7 +78,6 @@
                 <div><p class="summary-label">Prod Satria</p><p class="summary-val" id="res_prod">0</p></div>
             </div>
         </div>
-
         <div class="card">
             <div class="section-title">Cari Nama Satria</div>
             <input type="text" id="searchName" class="search-input" placeholder="Ketik nama anda..." oninput="filterName()">
@@ -122,7 +116,11 @@
                 <div><label class="summary-label">Failed PU</label><input type="number" id="failed_pu" value="0" onfocus="clearZero(this)" onchange="syncLeader()"></div>
             </div>
         </div>
-        <button class="btn-send" id="btn-main" onclick="sendLaporan()">KIRIM LAPORAN KE WA & GSHEET</button>
+
+        <div class="admin-actions">
+            <button class="btn-send" id="btn-main" onclick="sendLaporan()">KIRIM LAPORAN KE WA & GSHEET</button>
+            <button class="btn-reset" onclick="resetData()">⚠️ RESET SEMUA DATA & TANGGAL</button>
+        </div>
     </div>
 </div>
 
@@ -135,8 +133,7 @@
         {id: "10066194", nama: "AZI AZAN"}, {id: "10075590", nama: "BUDJA GIGIH PRABOWO"},
         {id: "10072034", nama: "DENI KURNIAWAN"}, {id: "10082115", nama: "FAJAR SULISTIYANTO"},
         {id: "10079245", nama: "FITLI APRIAN SAPUTRO"}, {id: "10049109", nama: "HERU PRATAMA"},
-        {id: "10074622", nama: "KANTONA CAHYA FEBRINANDA"}, {id: "10078994", nama: "RIDWAN EKA JUNIYANTO"},
-        {id: "10082966", nama: "RIZKI NUR AZIS"}, {id: "10073627", nama: "RIZKY TULUS SETIAWAN"},
+        {id: "10074622", nama: "KANTONA CAHYA FEBRINANDA"}, {id: "10082966", nama: "RIZKI NUR AZIS"}, {id: "10073627", nama: "RIZKY TULUS SETIAWAN"},
         {id: "10078864", nama: "RUDIKUSMANTO"}
     ];
 
@@ -160,17 +157,18 @@
             document.getElementById('display-tgl').innerText = currentLockedDate;
 
             const container = document.getElementById('satria_list_container');
+            container.innerHTML = "";
             LIST_SATRIA.forEach(s => {
                 container.innerHTML += `
                     <div class="satria-row" id="row-${s.id}" onclick="toggleInput('${s.id}')">
-                        <span class="satria-name">${s.nama}</span>
-                        <span class="satria-status" id="status-${s.id}">✅ Sudah Input</span>
-                        <div id="input-area-${s.id}" class="input-area" onclick="event.stopPropagation()">
-                            <div class="input-field"><label>DELIVERY</label><input type="number" id="deliv-${s.id}" value="0" onfocus="clearZero(this)"></div>
-                            <div class="input-field"><label>PICKUP</label><input type="number" id="pu-${s.id}" value="0" onfocus="clearZero(this)"></div>
-                            <div class="input-field"><label>PENDING</label><input type="number" id="pnd-${s.id}" value="0" onfocus="clearZero(this)"></div>
-                            <button class="btn-sync" onclick="saveToCloud('${s.id}')">SINKRONKAN DATA</button>
-                        </div>
+                       <span class="satria-name">${s.nama}</span>
+                       <span class="satria-status" id="status-${s.id}">✅ Sudah Input</span>
+                       <div id="input-area-${s.id}" class="input-area" onclick="event.stopPropagation()">
+                           <div class="input-field"><label>DELIVERY</label><input type="number" id="deliv-${s.id}" value="0" onfocus="clearZero(this)"></div>
+                           <div class="input-field"><label>PICKUP</label><input type="number" id="pu-${s.id}" value="0" onfocus="clearZero(this)"></div>
+                           <div class="input-field"><label>PENDING</label><input type="number" id="pnd-${s.id}" value="0" onfocus="clearZero(this)"></div>
+                           <button class="btn-sync" onclick="saveToCloud('${s.id}')">SINKRONKAN DATA</button>
+                       </div>
                     </div>`;
             });
             loadFromCloud();
@@ -231,21 +229,19 @@
                 const statusEl = document.getElementById(`status-${s.id}`);
                 const inputArea = document.getElementById(`input-area-${s.id}`);
                 
-                if (inputArea.style.display !== 'grid') { 
-                    if(val) {
-                        document.getElementById(`deliv-${s.id}`).value = val.deliv || 0;
-                        document.getElementById(`pu-${s.id}`).value = val.pu || 0;
-                        document.getElementById(`pnd-${s.id}`).value = val.pnd || 0;
-                    }
+                if (inputArea.style.display !== 'grid' && val) {
+                    document.getElementById(`deliv-${s.id}`).value = val.deliv || 0;
+                    document.getElementById(`pu-${s.id}`).value = val.pu || 0;
+                    document.getElementById(`pnd-${s.id}`).value = val.pnd || 0;
                 }
 
                 if(val) {
-                    const isInputted = (val.deliv > 0 || val.pu > 0 || val.pnd > 0);
-                    statusEl.style.display = isInputted ? 'block' : 'none';
-                    if(isInputted) {
-                        rowEl.classList.add('inputted');
-                        onDuty++; tDelivS += parseInt(val.deliv); tPuS += parseInt(val.pu);
-                    } else { rowEl.classList.remove('inputted'); }
+                   const isInputted = (val.deliv > 0 || val.pu > 0 || val.pnd > 0);
+                   statusEl.style.display = isInputted ? 'block' : 'none';
+                   if(isInputted) {
+                       rowEl.classList.add('inputted');
+                       onDuty++; tDelivS += parseInt(val.deliv); tPuS += parseInt(val.pu);
+                   } else { rowEl.classList.remove('inputted'); }
                 }
             });
 
@@ -258,11 +254,11 @@
             document.getElementById('res_tdeliv').innerText = tDelivTotal;
             document.getElementById('res_failed').innerText = so - tDelivTotal;
             document.getElementById('res_prod').innerText = onDuty > 0 ? Math.round((tDelivS + tPuS) / onDuty) : 0;
-        } catch (e) { console.log("Refresh..."); }
+        } catch (e) { }
     }
 
     async function sendLaporan() {
-        if(!confirm("Kirim laporan dan RESET dashboard?")) return;
+        if(!confirm("Kirim laporan ke WhatsApp & Google Sheets?")) return;
         const btn = document.getElementById('btn-main');
         btn.innerText = "SEDANG MENGIRIM..."; btn.disabled = true;
 
@@ -285,57 +281,49 @@
         const dw_c = parseInt(lead.dw_count) || 0;
         const prj_d = parseInt(lead.project_deliv) || 0;
         const prj_c = parseInt(lead.project_count) || 0;
-
         const tDelivTotal = tDelivS + dw_d + prj_d;
-        const prodSatria = onDuty > 0 ? Math.round((tDelivS + tPuS) / onDuty) : 0;
-        const rataDeliv = onDuty > 0 ? Math.round(tDelivS / onDuty) : 0;
-        
-        const prodDW = dw_c > 0 ? Math.round(dw_d / dw_c) : "-";
-        const prodPrj = prj_c > 0 ? Math.round(prj_d / prj_c) : "-";
-        const rataPrj = prj_c > 0 ? Math.round(prj_d / prj_c) : "-";
 
         const payload = {
             tgl: currentLockedDate, so, tDelivS, tPuS, onDuty,
-            prodSatria, rataDeliv, failed_deliv: so - tDelivTotal,
+            prodSatria: onDuty > 0 ? Math.round((tDelivS + tPuS) / onDuty) : 0,
+            rataDeliv: onDuty > 0 ? Math.round(tDelivS / onDuty) : 0,
+            failed_deliv: so - tDelivTotal,
             dw_d, dw_c, cod: lead.cod || 0, xrt: lead.xrt || 0, f_pu: lead.f_pu || 0,
             detailSatria: detailS
         };
 
         await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
 
-        // FORMAT WHATSAPP SESUAI PERMINTAAN
         let msg = `*BLHR0 - Gunungkidul*\n${currentLockedDate}\n\n`;
-        msg += `*So outs*: ${so}\n`;
-        msg += `Prod Satria Mitra : ${prodSatria}\n`;
-        msg += `Rata - rata delive satria : ${rataDeliv}\n`;
-        msg += `Prod Mitra Project : ${prodPrj}\n`;
-        msg += `Rata - rata delive satria project : ${rataPrj}\n`;
-        msg += `Prod DW : ${prodDW}\n`;
-        msg += `Failed Delivery : ${so - tDelivTotal}\n`;
-        msg += `Pickup : ${tPuS}\n`;
-        msg += `Failed pick up : ${lead.f_pu || 0}\n`;
-        msg += `Load COD : ${lead.cod || 0}\n`;
-        msg += `XRT : ${lead.xrt || 0}\n\n`;
-        
-        msg += `*Satria/DW Active*\n`;
-        msg += `Active : ${LIST_SATRIA.length}\n`;
-        msg += `Satria On Schedule : ${LIST_SATRIA.length}\n`;
-        msg += `On duty : ${onDuty}\n`;
-        msg += `DW On : ${dw_c > 0 ? dw_c : '-'}`;
-
-        await fetch(`${FIREBASE_URL}satria.json`, { method: 'DELETE' });
-        await fetch(`${FIREBASE_URL}leader.json`, { method: 'DELETE' });
+        msg += `*So outs*: ${so}\nProd Satria Mitra : ${payload.prodSatria}\nRata - rata delive satria : ${payload.rataDeliv}\n`;
+        msg += `Failed Delivery : ${so - tDelivTotal}\nPickup : ${tPuS}\nFailed pick up : ${lead.f_pu || 0}\n`;
+        msg += `Load COD : ${lead.cod || 0}\nXRT : ${lead.xrt || 0}\n\n*Satria/DW Active*\nActive : ${LIST_SATRIA.length}\nOn duty : ${onDuty}\nDW On : ${dw_c > 0 ? dw_c : '-'}`;
 
         window.open(`https://wa.me/6282210011917?text=${encodeURIComponent(msg)}`, '_blank');
-        location.reload();
+        btn.innerText = "KIRIM LAPORAN KE WA & GSHEET"; btn.disabled = false;
+    }
+
+    async function resetData() {
+        if(!confirm("PERINGATAN: Semua data input satria, data leader, dan TANGGAL akan dihapus. Lanjutkan reset?")) return;
+        
+        try {
+            // Menghapus data satria dan leader (termasuk locked_date)
+            await fetch(`${FIREBASE_URL}satria.json`, { method: 'DELETE' });
+            await fetch(`${FIREBASE_URL}leader.json`, { method: 'DELETE' });
+            
+            alert("Dashboard Berhasil Direset!");
+            location.reload();
+        } catch (e) {
+            alert("Gagal mereset data.");
+        }
     }
 
     function clearZero(el) { if (el.value == "0") el.value = ""; }
     function toggleInput(id) {
         const target = document.getElementById(`input-area-${id}`);
-        const current = target.style.display;
+        const isVisible = target.style.display === 'grid';
         document.querySelectorAll('.input-area').forEach(el => el.style.display = 'none');
-        target.style.display = current === 'grid' ? 'none' : 'grid';
+        target.style.display = isVisible ? 'none' : 'grid';
     }
     function filterName() {
         const q = document.getElementById('searchName').value.toUpperCase();
@@ -358,3 +346,4 @@
 </script>
 </body>
 </html>
+
