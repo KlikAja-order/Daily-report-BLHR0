@@ -26,6 +26,15 @@
         .summary-label { font-size: 0.75rem; color: var(--text-dim); }
         .summary-val { font-size: 1.1rem; font-weight: 700; }
 
+        /* Style Baru untuk Insight */
+        .insight-container { margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .insight-box { background: rgba(15, 23, 42, 0.4); padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); }
+        .insight-title { font-size: 0.65rem; color: var(--text-dim); font-weight: 700; margin-bottom: 5px; text-transform: uppercase; }
+        .insight-name { font-size: 0.85rem; font-weight: 700; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .insight-val { font-size: 0.75rem; font-weight: 600; }
+        .color-up { color: var(--success); }
+        .color-down { color: var(--danger); }
+
         .search-input { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid var(--accent); background: rgba(15, 23, 42, 0.5); color: white; font-size: 1rem; outline: none; margin-bottom: 15px; }
         
         .satria-row { border-bottom: 1px solid var(--border); padding: 15px 10px; cursor: pointer; transition: 0.3s; border-radius: 10px; margin-bottom: 5px; }
@@ -85,6 +94,39 @@
                 <div><p class="summary-label">Total Deliv</p><p class="summary-val" id="res_tdeliv" style="color:var(--success)">0</p></div>
                 <div><p class="summary-label">Prod Satria</p><p class="summary-val" id="res_prod">0</p></div>
             </div>
+
+            <div class="insight-container" id="insight-box">
+                <div class="insight-box">
+                    <p class="insight-title">🚚 Deliv Terbanyak</p>
+                    <span class="insight-name" id="max-deliv-name">-</span>
+                    <span class="insight-val color-up" id="max-deliv-val">0</span>
+                </div>
+                <div class="insight-box">
+                    <p class="insight-title">🚚 Deliv Terendah</p>
+                    <span class="insight-name" id="min-deliv-name">-</span>
+                    <span class="insight-val color-down" id="min-deliv-val">0</span>
+                </div>
+                <div class="insight-box">
+                    <p class="insight-title">📦 Pickup Terbanyak</p>
+                    <span class="insight-name" id="max-pu-name">-</span>
+                    <span class="insight-val color-up" id="max-pu-val">0</span>
+                </div>
+                <div class="insight-box">
+                    <p class="insight-title">📦 Pickup Terendah</p>
+                    <span class="insight-name" id="min-pu-name">-</span>
+                    <span class="insight-val color-down" id="min-pu-val">0</span>
+                </div>
+                <div class="insight-box">
+                    <p class="insight-title">⏳ Pending Tertinggi</p>
+                    <span class="insight-name" id="max-pnd-name">-</span>
+                    <span class="insight-val color-down" id="max-pnd-val">0</span>
+                </div>
+                <div class="insight-box">
+                    <p class="insight-title">⏳ Pending Terendah</p>
+                    <span class="insight-name" id="min-pnd-name">-</span>
+                    <span class="insight-val color-up" id="min-pnd-val">0</span>
+                </div>
+            </div>
         </div>
 
         <div class="card">
@@ -138,13 +180,7 @@
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx8VaqAvwam3aOjFyReh4BuIF9ai_lgXmz2wRV0fiOiyqSFx1gDobtWZJq-AQtMbuvm4A/exec";
     
     const LIST_SATRIA = [
-        {id: "10078570", nama: "AHMAD KHOIRUL ANAAM"}, {id: "10070223", nama: "ARIF PRASETYO"},
-        {id: "10066194", nama: "AZI AZAN"}, {id: "10075590", nama: "BUDJA GIGIH PRABOWO"},
-        {id: "10072034", nama: "DENI KURNIAWAN"}, {id: "10082115", nama: "FAJAR SULISTIYANTO"},
-        {id: "10079245", nama: "FITLI APRIAN SAPUTRO"}, {id: "10049109", nama: "HERU PRATAMA"},
-        {id: "10074622", nama: "KANTONA CAHYA FEBRINANDA"}, {id: "10078994", nama: "RIDWAN EKA JUNIYANTO"},
-        {id: "10082966", nama: "RIZKI NUR AZIS"}, {id: "10073627", nama: "RIZKY TULUS SETIAWAN"},
-        {id: "10078864", nama: "RUDIKUSMANTO"}
+        {id: "10078570", nama: "AHMAD KHOIRUL ANAAM"}, {id: "10070223", nama: "ARIF PRASETYO"}, {id: "10066194", nama: "AZI AZAN"}, {id: "10075590", nama: "BUDJA GIGIH PRABOWO"}, {id: "10072034", nama: "DENI KURNIAWAN"}, {id: "10082115", nama: "FAJAR SULISTIYANTO"}, {id: "10079245", nama: "FITLI APRIAN SAPUTRO"}, {id: "10049109", nama: "HERU PRATAMA"}, {id: "10074622", nama: "KANTONA CAHYA FEBRINANDA"}, {id: "10082966", nama: "RIZKI NUR AZIS"}, {id: "10073627", nama: "RIZKY TULUS SETIAWAN"}, {id: "10078864", nama: "RUDIKUSMANTO"}
     ];
 
     let currentLockedDate = "";
@@ -233,6 +269,8 @@
             });
 
             let tDelivS = 0, tPuS = 0, onDuty = 0;
+            let dataInsight = [];
+
             LIST_SATRIA.forEach(s => {
                 const val = allS[s.id];
                 const rowEl = document.getElementById(`row-${s.id}`);
@@ -252,10 +290,38 @@
                    statusEl.style.display = isInputted ? 'block' : 'none';
                    if(isInputted) {
                        rowEl.classList.add('inputted');
-                       onDuty++; tDelivS += parseInt(val.deliv); tPuS += parseInt(val.pu);
+                       onDuty++; 
+                       tDelivS += parseInt(val.deliv); 
+                       tPuS += parseInt(val.pu);
+                       dataInsight.push({ nama: s.nama, deliv: parseInt(val.deliv), pu: parseInt(val.pu), pnd: parseInt(val.pnd) });
                    } else { rowEl.classList.remove('inputted'); }
                 }
             });
+
+            // Update Insight Logika
+            if (dataInsight.length > 0) {
+                const maxDeliv = dataInsight.reduce((prev, current) => (prev.deliv > current.deliv) ? prev : current);
+                const minDeliv = dataInsight.reduce((prev, current) => (prev.deliv < current.deliv) ? prev : current);
+                const maxPu = dataInsight.reduce((prev, current) => (prev.pu > current.pu) ? prev : current);
+                const minPu = dataInsight.reduce((prev, current) => (prev.pu < current.pu) ? prev : current);
+                const maxPnd = dataInsight.reduce((prev, current) => (prev.pnd > current.pnd) ? prev : current);
+                const minPnd = dataInsight.reduce((prev, current) => (prev.pnd < current.pnd) ? prev : current);
+
+                document.getElementById('max-deliv-name').innerText = maxDeliv.nama.split(' ')[0];
+                document.getElementById('max-deliv-val').innerText = maxDeliv.deliv;
+                document.getElementById('min-deliv-name').innerText = minDeliv.nama.split(' ')[0];
+                document.getElementById('min-deliv-val').innerText = minDeliv.deliv;
+                
+                document.getElementById('max-pu-name').innerText = maxPu.nama.split(' ')[0];
+                document.getElementById('max-pu-val').innerText = maxPu.pu;
+                document.getElementById('min-pu-name').innerText = minPu.nama.split(' ')[0];
+                document.getElementById('min-pu-val').innerText = minPu.pu;
+
+                document.getElementById('max-pnd-name').innerText = maxPnd.nama.split(' ')[0];
+                document.getElementById('max-pnd-val').innerText = maxPnd.pnd;
+                document.getElementById('min-pnd-name').innerText = minPnd.nama.split(' ')[0];
+                document.getElementById('min-pnd-val').innerText = minPnd.pnd;
+            }
 
             const so = (parseInt(lead.pnd_kmrn) || 0) + (parseInt(lead.inbound) || 0);
             const dw_d = parseInt(lead.dw_deliv) || 0;
@@ -377,4 +443,3 @@
 </script>
 </body>
 </html>
-
