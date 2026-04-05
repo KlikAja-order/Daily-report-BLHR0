@@ -59,6 +59,13 @@
         .hidden { display: none !important; }
         #password-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.98); display: flex; align-items: center; justify-content: center; z-index: 9999; }
         .modal-pw { background: #1e293b; padding: 30px; border-radius: 20px; text-align: center; border: 1px solid var(--accent); width: 85%; max-width: 320px; }
+        .alert-warning {display: flex; align-items: center; gap: 10px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; padding: 10px 12px; border-radius: 10px; margin-bottom: 12px; animation: pulseAlert 2s infinite;}
+        .alert-icon { font-size: 1.2rem; animation: shake 1.5s infinite;
+        .alert-text { font-size: 0.75rem; line-height: 1.4; font-weight: 600;}
+        /* Animasi nyala halus */
+        @keyframes pulseAlert { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);} 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }}
+        /* Animasi goyang icon */
+        @keyframes shake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-10deg); } 50% { transform: rotate(10deg); } 75% { transform: rotate(-5deg); }}
     </style>
 </head>
 <body>
@@ -86,7 +93,11 @@
     </div>
 
     <div id="view-satria">
-        <p style="color: #ef4444; font-size: 0.7rem; font-weight: 600; margin-bottom: 8px; text-align: center;">*Pastikan tanggal di atas adalah tanggal hari ini. Jika masih tanggal kemarin, JANGAN INPUT dulu!</p>
+        <div class="alert-warning">
+            <span class="alert-icon">⚠️</span>
+            <span class="alert-text">Pastikan tanggal di atas adalah tanggal hari ini. Jika masih tanggal kemarin, <b>JANGAN INPUT dulu!</b>
+            </span>
+        </div>
         <div class="card" style="border: 1px solid var(--accent); background: rgba(56, 189, 248, 0.05);">
             <div class="section-title">Monitoring Realtime</div>
             <div class="summary-grid">
