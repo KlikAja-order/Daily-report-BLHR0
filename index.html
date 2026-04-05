@@ -461,13 +461,6 @@
     const today = new Date().toLocaleDateString('id-ID', { 
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
     });
-    function isTanggalValid() {
-    const today = new Date().toLocaleDateString('id-ID', { 
-        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
-    });
-
-    return document.getElementById('display-tgl').innerText === today;
-    }
 
     const alertBox = document.querySelector('.alert-warning');
 
@@ -477,6 +470,13 @@
         alertBox.style.display = 'flex';
     }
     }
+    function isTanggalValid() {
+    const today = new Date().toLocaleDateString('id-ID', { 
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
+    });
+
+    return document.getElementById('display-tgl').innerText === today;}
+    
 </script>
 </body>
 </html>
