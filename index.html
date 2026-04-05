@@ -237,6 +237,9 @@
     }
 
     async function saveToCloud(id) {
+        if (!isTanggalValid()) {
+    if (!confirm("⚠️ Tanggal bukan hari ini. Yakin tetap mau input?")) return;
+}
         const d = parseInt(document.getElementById(`deliv-${id}`).value) || 0;
         const p = parseInt(document.getElementById(`pu-${id}`).value) || 0;
         const n = parseInt(document.getElementById(`pnd-${id}`).value) || 0;
