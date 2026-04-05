@@ -60,7 +60,7 @@
         #password-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.98); display: flex; align-items: center; justify-content: center; z-index: 9999; }
         .modal-pw { background: #1e293b; padding: 30px; border-radius: 20px; text-align: center; border: 1px solid var(--accent); width: 85%; max-width: 320px; }
         .alert-warning {display: flex; align-items: center; gap: 10px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; padding: 10px 12px; border-radius: 10px; margin-bottom: 12px; animation: pulseAlert 2s infinite;}
-        .alert-icon { font-size: 1.2rem; animation: shake 1.5s infinite;
+        .alert-icon { font-size: 1.2rem; animation: shake 1.5s infinite;}
         .alert-text { font-size: 0.75rem; line-height: 1.4; font-weight: 600;}
         /* Animasi nyala halus */
         @keyframes pulseAlert { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);} 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }}
@@ -213,6 +213,7 @@
                 await fetch(`${FIREBASE_URL}leader/locked_date.json`, { method: 'PUT', body: JSON.stringify(currentLockedDate) });
             }
             document.getElementById('display-tgl').innerText = currentLockedDate;
+            checkTanggalValid();
 
             const container = document.getElementById('satria_list_container');
             container.innerHTML = ""; 
@@ -230,6 +231,7 @@
                     </div>`;
             });
             loadFromCloud();
+            checkTanggalValid();
             setInterval(loadFromCloud, 5000);
         } catch (e) { console.error("Init failed", e); }
     }
@@ -452,6 +454,19 @@
         document.getElementById('tab-leader').classList.toggle('active', tab === 'leader');
     }
     window.onload = init;
+    function checkTanggalValid() {
+    const today = new Date().toLocaleDateString('id-ID', { 
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' 
+    });
+
+    const alertBox = document.querySelector('.alert-warning');
+
+    if (document.getElementById('display-tgl').innerText === today) {
+        alertBox.style.display = 'none';
+    } else {
+        alertBox.style.display = 'flex';
+    }
+    }
 </script>
 </body>
 </html>
