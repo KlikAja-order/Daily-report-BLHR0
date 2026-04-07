@@ -126,7 +126,7 @@
 
 <div id="password-overlay" class="hidden">
     <div class="modal-pw">
-        <h3> Akses Leader</h3>
+        <h3>🔐 Akses Leader</h3>
         <input type="password" id="pw_input" placeholder="Pin" style="margin: 20px 0; text-align: center; letter-spacing: 8px; width:100%; padding:10px; border-radius:8px; border:none;">
         <div style="display: flex; gap: 10px;">
             <button onclick="closeLeader()" style="flex:1; padding:12px; background:#475569; color:white; border:none; border-radius:8px;">Batal</button>
@@ -148,7 +148,7 @@
 
     <div id="view-satria">
         <div class="alert-warning">
-            <span class="alert-icon"></span>
+            <span class="alert-icon">⚠️</span>
             <span class="alert-text">Pastikan tanggal di atas adalah tanggal hari ini. Jika masih tanggal kemarin, <b>JANGAN INPUT dulu!</b>
             </span>
         </div>
@@ -163,32 +163,32 @@
 
             <div class="insight-container" id="insight-box">
                 <div class="insight-box">
-                    <p class="insight-title"> Deliv Terbanyak</p>
+                    <p class="insight-title">🚚 Deliv Terbanyak</p>
                     <span class="insight-name" id="max-deliv-name">-</span>
                     <span class="insight-val color-up" id="max-deliv-val">0</span>
                 </div>
                 <div class="insight-box">
-                    <p class="insight-title"> Deliv Terendah</p>
+                    <p class="insight-title">🚚 Deliv Terendah</p>
                     <span class="insight-name" id="min-deliv-name">-</span>
                     <span class="insight-val color-down" id="min-deliv-val">0</span>
                 </div>
                 <div class="insight-box">
-                    <p class="insight-title"> Pickup Terbanyak</p>
+                    <p class="insight-title">📦 Pickup Terbanyak</p>
                     <span class="insight-name" id="max-pu-name">-</span>
                     <span class="insight-val color-up" id="max-pu-val">0</span>
                 </div>
                 <div class="insight-box">
-                    <p class="insight-title"> Pickup Terendah</p>
+                    <p class="insight-title">📦 Pickup Terendah</p>
                     <span class="insight-name" id="min-pu-name">-</span>
                     <span class="insight-val color-down" id="min-pu-val">0</span>
                 </div>
                 <div class="insight-box">
-                    <p class="insight-title"> Pending Tertinggi</p>
+                    <p class="insight-title">⏳ Pending Tertinggi</p>
                     <span class="insight-name" id="max-pnd-name">-</span>
                     <span class="insight-val color-down" id="max-pnd-val">0</span>
                 </div>
                 <div class="insight-box">
-                    <p class="insight-title"> Pending Terendah</p>
+                    <p class="insight-title">⏳ Pending Terendah</p>
                     <span class="insight-name" id="min-pnd-name">-</span>
                     <span class="insight-val color-up" id="min-pnd-val">0</span>
                 </div>
@@ -236,7 +236,7 @@
         
         <div class="btn-group-fixed">
             <button class="btn-send" id="btn-main" onclick="sendLaporan()">KIRIM LAPORAN KE WA & GSHEET</button>
-            <button class="btn-reset" onclick="resetDashboard()"> HAPUS & RESET DATA DASHBOARD</button>
+            <button class="btn-reset" onclick="resetDashboard()">⚠️ HAPUS & RESET DATA DASHBOARD</button>
         </div>
     </div>
 </div>
@@ -277,7 +277,7 @@
                        <div class="name-wrapper">
                            <span class="satria-name">${s.nama}</span>
                        </div>
-                       <span class="satria-status" id="status-${s.id}"> Sudah Input</span>
+                       <span class="satria-status" id="status-${s.id}">✅ Sudah Input</span>
                        <div id="input-area-${s.id}" class="input-area" onclick="event.stopPropagation()">
                            <div class="input-field"><label>DELIVERY</label><input type="number" id="deliv-${s.id}" value="0" onfocus="clearZero(this)"></div>
                            <div class="input-field"><label>PICKUP</label><input type="number" id="pu-${s.id}" value="0" onfocus="clearZero(this)"></div>
@@ -294,7 +294,7 @@
 
     async function saveToCloud(id) {
         if (!isTanggalValid()) {
-    if (!confirm(" Tanggal bukan hari ini. Yakin tetap mau input?")) return;
+    if (!confirm("⚠️ Tanggal bukan hari ini. Yakin tetap mau input?")) return;
 }
         const d = parseInt(document.getElementById(`deliv-${id}`).value) || 0;
         const p = parseInt(document.getElementById(`pu-${id}`).value) || 0;
@@ -358,7 +358,7 @@
                 if(nameWrapper) {
                     const badge = document.createElement('span');
                     badge.className = `top-badge top-${index + 1}`;
-                    badge.innerText = `${index + 1}`;
+                    badge.innerText = `🏆${index + 1}`;
                     nameWrapper.insertBefore(badge, nameWrapper.firstChild);
                 }
             }
